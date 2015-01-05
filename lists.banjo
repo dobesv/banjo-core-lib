@@ -18,42 +18,6 @@
 }) @ {
 
   
-  lists.nonempty = (
-    doc = "Common behavior for nonempty lists.  Nonempty lists have a head and tail method that can be called if you know the list is nonempty."
-  ) => {
-    nonempty lists.mixin = {
-      (list # visitor) = visitor.nonempty(list.head, list.tail)
-      list.map(f) = list.class @ {head = f(list.head), tail = list.tail.map(f)}
-    }
-  }
-  
-  lists.infinite = (
-    doc = "
-      Class for infinite lists.  Infinite lists do not support operations that require scanning the entire list,
-      such a length, fold, append, and concatenation.
-    "
-  ) => {
-    infinite lists.mixin = lists.nonempty.mixin @ {
-      class = infinite lists
-      (list # visitor) = visitor.nonempty(list.head, list.tail)
-    }
-  }
-
-  lists.empty = (
-    doc = "The empty list."
-  ) => lists.finite.mixin @ #empty
-
-  lists.singleton(element) = (
-    doc = "Create a new list with a single element."
-  ) => lists.finite.mixin @  lists.nonempty.mixin @ { head = element, tail = lists.empty }
-
-  lists.unfold(generator, initial value) = (
-    doc = "
-      Create a new infinite list based on a generator function.  The generator takes a previous value and returns the next one.
-    "
-  ) => lists.infinite.mixin @ { head = initial value, tail = lists.unfold(generator, generator(initial value)) }
-
-
   lists.mixin = {
 
     list.range(offset, length) = (
@@ -374,7 +338,42 @@
       ) => lists.unfold(x -> x # { empty = list, nonempty(elt, etc) = etc })
 
     }
-    finite lists.lazy(list thunk) = lists.lazy(list thunk, false)
+    
+  lists.nonempty = (
+    doc = "Common behavior for nonempty lists.  Nonempty lists have a head and tail method that can be called if you know the list is nonempty."
+  ) => {
+    nonempty lists.mixin = {
+      (list # visitor) = visitor.nonempty(list.head, list.tail)
+      list.map(f) = list.class @ {head = f(list.head), tail = list.tail.map(f)}
+    }
   }
+  
+  lists.infinite = (
+    doc = "
+      Class for infinite lists.  Infinite lists do not support operations that require scanning the entire list,
+      such a length, fold, append, and concatenation.
+    "
+  ) => {
+    infinite lists.mixin = lists.nonempty.mixin @ {
+      class = infinite lists
+      (list # visitor) = visitor.nonempty(list.head, list.tail)
+    }
+  }
+
+  lists.empty = (
+    doc = "The empty list."
+  ) => lists.finite.mixin @ #empty
+
+  lists.singleton(element) = (
+    doc = "Create a new list with a single element."
+  ) => lists.finite.mixin @  lists.nonempty.mixin @ { head = element, tail = lists.empty }
+
+  lists.unfold(generator, initial value) = (
+    doc = "
+      Create a new infinite list based on a generator function.  The generator takes a previous value and returns the next one.
+    "
+  ) => lists.infinite.mixin @ { head = initial value, tail = lists.unfold(generator, generator(initial value)) }
+
+
 
 }
