@@ -1,0 +1,1 @@
+cp -> strings.fromCodePoint(cp)
