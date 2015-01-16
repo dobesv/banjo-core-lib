@@ -1,4 +1,4 @@
-#true @ {
+.true @ {
   (! true) = false
   (true && x) = x
   (true || x) = true
@@ -6,5 +6,5 @@
   (true | x) = x
   true.map(-> x) = [x]
   true.ordinal = 1
-  (true == x) = x #? { true } || false
+  (true == x) = x({ true, false })
 }

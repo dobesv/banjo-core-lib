@@ -1,0 +1,24 @@
+.false @ {
+  (! false) = (
+    examples = [
+      ! false == true
+      true == !false
+      (!false || false) == true
+    ]
+  ) => true
+  (false && x) = (
+    examples = [ (false && true) == false ]
+  ) => false
+  (false || x) = (
+    examples = [
+      (false || false) == false
+      (false || true) == true
+      (false || []) == []
+   ]
+  ) => x
+  (false & x) = false
+  (false | x) = x
+  false.map(f) = []
+  false.ordinal = 0
+  (false == x) = x({ false = true, true = false })
+}
