@@ -1,0 +1,348 @@
+(doc = "
+    Methods common to lists.  
+    
+    This should be extended with either .nonempty(head, tail) to make a nonempty list, or .empty for an empty list.
+") => {
+    list.range(offset, length) = (
+      doc = "
+        Create a view of the list with a reduced range.
+
+        If the list has fewer than `offset+limit` elements, the resulting
+        list will have fewer than `limit` elements in it.
+
+        Any fractional part of the `offset` or `length` will be ignored.
+
+        If the `offset` is less than or equal to zero no offset will be applied.
+
+        If the `length` is less than of equal to zero the resulting list will
+        be empty.
+      "
+      examples = [[1,2,3,4,5].range(2,2) == [3,4]]
+    ) => list.range from(offset).range to(length)
+
+    list.range from(start) = (
+      doc = "
+        Create a view of the list that skips some of the starting elements.
+
+        If the list has fewer than `offset` elements, the resulting
+        list will be empty.
+
+        Any fractional part of the `offset` will be ignored.
+
+        If the `offset` is equal to zero no offset will be applied.
+
+        If the `offset` is negative, the effective offset will be the offset
+        plus the length of the list, essentially allowing a negative offset
+        to be used to select a specific number of the last elements of the
+        list.  If `-offset` is greater than the number of elements in the list,
+        the list is returned as-is.
+
+        For example, `[1,2,3,4,5].range from(2) == [3,4,5]`
+      "
+    ) => start.sign({
+      positive = list({
+        nonempty(_, etc) = etc.range from(start-1)
+        empty = lists.empty
+      })
+      negative = list.range from(max(0, list.length + n))
+      0 = list
+    })
+
+    list.range to(limit) = (
+      doc = "
+        Create a view of the list with a limited range.
+
+        If the list already has fewer than `limit` elements, this has no effect.  A
+        zero `limit` will result in an empty list.
+
+        A negative `limit` will be added to the length of the list to calculate an effective
+        `limit`, essentially requesting all but the last `-limit` elements.
+      "
+      examples = [[1,2,3,4,5].range to(3) == [1,2,3]]
+    ) => end.sign({
+      positive = list.class.mixin @ {
+        (visitor) = list({
+          nonempty(element, etc) = visitor.nonempty(element, etc.range to(n-1))
+          end = visitor.end
+        })
+      }
+      0 = lists.empty
+      negative = list.range to(max(0, list.length + limit))
+    })
+
+    list.at(n) = (
+      doc = "
+        Return a view of the list including only the element found after skipping `n` elements.
+
+        If `n` is negative, the effective offset is the length of the list plus `n` - allowing a negative
+        offset to work back from the end of the list.
+
+        If `n` (or `-n`) is greater or equal to the number of elements in the list, an empty list is returned.
+      "
+      examples = [
+        [1,2,3,4,5].at(0) == [1]
+        [1,2,3,4,5].at(1) == [2]
+        [1,2,3,4,5].at(-1) == [5]
+        [1,2,3,4,5].at(-2) == [4]
+      ]
+    ) => list.range from(n).range to(1)
+
+    list.mapped(mapping) = (
+      doc = "
+        Create a view of the list where each elements are replaced with their corresponding value in the given
+        mapping.
+      "
+      examples = [[1,2,3,4,5].mapped(m) == [m(1), m(2), m(3), m(4), m(5)]]
+    ) => list.class.mixin @ {
+      (visitor) = list({
+        nonempty(element, etc) = visitor.element(mapping[element], etc.mapped(mapping))
+        empty = visitor.empty
+      })
+    }
+
+    list.filtered(predicate) = (
+      doc = "
+        Create a view of the list containing only elements that \"pass\" the filter.  That is,
+        for any element `e`, `predicate(e) == true`.
+      "
+      examples = [[1,2,3,4].filtered(.odd) == [1,3]]
+    ) => list.class.mixin @ {
+      (visitor) = list({
+        nonempty(element, etc) = (
+          filtered etc = etc.filtered(predicate)
+        ) => predicate(element)({
+          true = visitor.element(element, filtered etc)
+          false = filteredEtc(visitor)
+        })
+        empty = visitor.empty
+      })
+    }
+
+    list.right folded(function, initial state) = (
+      doc = "
+        Apply the given function to each element while threading a state through
+        each call.  The function accepts an object with left and right values and
+        returns a new value that may either be used as a left or right value for
+        the next call or returned.
+
+        The `initial value` is used to ensure there is always a value to return
+        from the fold and is effectively pre-pended to the list as part of the fold.
+
+        This fold is right-associative and lazy, which means that only as much of the list
+        that is actually used by the provided function will be walked by the algorithm.
+
+        The final function return value is returned.  For an empty list, the `initial state` is
+        returned.
+      "
+      examples = (f({left,right}) = (left + right)) => [
+        [1,2,3,4,5].reverse folded(f,0) == f({left=0,right=f({left=1,right=f({left=2,right=f({left=3,right=f({left=4,right=5})})})})}) == (0+(1+(2+(3+(4+5))))) == 15
+      ]
+    ) => list({
+      nonempty(element, etc) = function({left = initial state, right = etc.right folded(function, element)})
+      empty = initial state
+    })
+
+    list.is empty = (
+      doc = "Return true if this list is empty (has no elements), otherwise return false."
+      examples = [
+        [].is empty == true
+        [1].is empty == false
+        [1,2,3].is empty == false
+      ]
+    ) => list({ empty = true, nonempty = false })
+
+    list.is nonempty = (
+      doc = "Return true if the list has at least one element, otherwise return false."
+      examples = [
+        [1].is nonempty == true
+        [].is nonempty == false
+      ]
+    ) => list({ empty = false, nonempty = true })
+
+    list.without prefix(prefix) = (
+      doc = "If the list starts with the given prefix, return #suffix(rest of list).  Otherwise returns #not matched."
+    ) => prefix({
+      ; Ran out of prefix, so all the elements must have matched
+      empty = .suffix(list)
+
+      nonempty(prefix elt, prefix etc) = list({
+        ; Compare this element with the corresponding prefix element
+        nonempty(list elt, list etc) = (prefix elt == list elt)({
+          ; Elements are equal, continue with the remaining elements (if any)
+          true = list etc.without prefix(prefix etc)
+
+          ; Elements not equal
+          false = .not matched
+        })
+
+        ; Ran out of list
+        empty = .not matched
+      })
+    })
+
+    list.starts with(prefix) = (
+      doc = "Return true if the list is at least as long as prefix and all elements in the list are equal (using `prefix element == list element`) up to the length of the prefix"
+    ) => prefix({
+      ; If we reach the end of the prefix, then it was a prefix
+      empty = true
+
+      ; Still at least one more element to check in the prefix
+      nonempty(prefix elt, prefix etc) = list({
+        nonempty(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with prefix etc)
+
+        ; No element in the list to look at, the list is too short
+        empty = false
+      })
+    })
+
+    (list && result) = (
+      doc = "Return `result` if the `list` is nonempty, otherwise return `list` (which is the empty list)"
+    ) => list({
+      nonempty = result
+      empty = list
+    })
+
+    (list || substitute) = (
+      doc = "Return `substitute` if the `list` is empty.  Otherwise return the list itself."
+    ) => list({
+      nonempty = list
+      empty = substitute
+    })
+
+    (list ?: substitute) = (
+      doc = "Return `substitute` if the `list` is empty.  Otherwise return the first element."
+    ) => list({
+      nonempty(first) = first
+      empty = substitute
+    })
+
+    list.flattened = (
+      doc = "
+        Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists.
+
+        Note that this is roughly equivalent to `list.sum([])`.
+      "
+      examples = [
+        [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
+      ]
+    ) => list.class.mixin @ {
+      chain(x) = list({
+        empty = x.empty
+        nonempty(sublist, etc) = (sublist + etc.flattened)(x)
+      })
+    }
+
+    list.sum(start) = (
+      doc = "
+        Return the result of a `+` operation on all elements of the list and the `start` parameter (typically
+        `0` or `[]` is used as the `start` value)
+      "
+      examples = [
+        [1,2,3].sum(0) == 0 + 1 + 2 + 3 == 6
+        [[1,2],[3,4],[5,6]].sum([]) == [] + [1,2] + [3,4] + [5,6] == [1,2,3,4,5,6]
+      ]
+    ) => list.left folded({left, right} -> left + right)
+
+
+    list.with offsets = (
+      doc = "
+        Return a view of the list where the list and its tails have an extra method `offset` returning the number of
+        elements passed to reach that tail.
+      "
+
+      list with offsets(offset list, start offset) = list.class.mixin @ {
+        (visitor) = offset list({
+          empty = offset list
+          nonempty(element, etc) = nonempty(element, list with offset(etc, start offset+1))
+        })
+        offset = offset
+        x.range to(n) = list with offsets(x:range to(n), start offset)
+        x.mapped(mapping) = list with offsets(x:map(mapping), start offset)
+      }
+    ) => list with offsets(list, 0)
+
+      list.left folded(function, initial state) = (
+        doc = "
+          Apply the given function to each element while threading a state through
+          each call.  The function accepts an element and a state and returns a new
+          state.
+
+          The `initial value` is used to ensure there is always a value to return
+          from the fold and is effectively pre-pended to the list as part of the fold.
+
+          This fold is left-associative.
+
+          The final function value is returned.  For an empty list, the `initial state` is
+          returned.
+        "
+        examples = (f({left,right}) = (left + right)) => [
+          [1,2,3,4,5].folded(f,0) == f({left=f({left=f({left=f({left=f({left=0,right=1}),right=2}),right=3}),right=4}),right=5}) == (((((0+1)+2)+3)+4)+5) == 15
+        ]
+
+        helper(tail, p) = tail({
+          nonempty(element, tail tail) = helper(tail tail, {left = function(p @ {right=element})})
+          empty = p.left
+        })
+      ) => helper(list, {left = initial state})
+
+      list.length = (
+        doc = "
+          Calculate the length of the list.
+
+          For example: `[1,2,3].length == 3`
+        "
+      ) => list.left folded({right} -> 1 + right, 0)
+
+      (x ∈ list) = (
+        doc = "Return true if `x == element` for any `element` in `list`."
+        examples = [
+           "apple" ∈ ["apple", "pear", "banana"] == true
+           "orange" ∈ ["apple", "pear", "banana"] == true
+        ]
+      ) => list.left folded(
+        {left = head, right = found in tail} -> (x == head || found in tail)
+      )
+
+
+      (prefix + suffix) = (
+        doc = "
+          Return a list with all the elements of this list followed by all the elements of the other list.
+
+          If the suffix is an infinite list, the result will also be an infinite list.
+        "
+      ) => suffix.class.mixin @ {
+        list(visitor) = prefix({
+          nonempty(element, etc) = visitor.nonempty(element, etc + suffix)
+          empty = suffix(visitor)
+        })
+      }
+
+
+      list.repeating = (
+        doc = "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
+      ) => lists.unfold(x -> x({ empty = list, nonempty(elt, etc) = etc }))
+
+      (list == other list) = (
+        doc = "
+          True if the lists are the same length and each element
+          of both lists is `==` the element at the same position
+          in the other list.
+        "
+        examples = [
+          [] == []
+          [1, 2] == [1, 2]
+          ([1,2,3] == []) == false
+        ]
+      ) => list({
+        empty = other list({
+          empty = true
+          nonempty = false
+        })
+        nonempty(head, tail) = other list({
+          empty = false
+          nonempty(other head, other tail) =
+            (head == other head) && (tail == other tail)
+        })
+      })
+
+  }

@@ -1,1 +1,1 @@
-0.next integer
+traits.number @ { negative = false, numerator bits = [true], denominator bits = [true] }

@@ -1,0 +1,123 @@
+(
+  doc = "
+    Implementation of core numbers.
+    
+    A number can be represented with:
+    
+    * negative: a flag indicating sign (positive or negative)
+    * numerator bits: a list of bits (booleans) for the base number / numerator
+    * denominator bits: a list of bits (booleans) for the denominator
+    
+    Note that these simplified numbers cannot represent irrational numbers, complex numbers, or infinities.  This
+    representation can, however, cover the full range of floating point numbers (excluding infinity).
+    
+    To construct a fresh number, concatenate this trait with an object providing the above properties, e.g.
+    
+    0 = traits.number @ { negative = false, numerator bits = [], denominator bits [true] }
+    1 = traits.number @ { negative = false, numerator bits = [true], denominator bits [true] }
+    2 = traits.number @ { negative = false, numerator bits = [true, false], denominator bits [true] }
+    -1 = traits.number @ { negative = true, numerator bits = [true], denominator bits [true] }
+    -2 = traits.number @ { negative = true, numerator bits = [true, false], denominator bits [true] }
+  "
+  bits plus one(bits to inc) = bits to inc {
+    empty = [true]
+    nonempty(bit, tail) = bit{
+      true = [false] + bits plus one(tail)
+      false = [true] + tail
+    }
+  }
+  bits plus bits(a, b) = a {
+    empty = b
+    nonempty(a bit, a tail) = b {
+      empty = a
+      nonempty(b bit, b tail) = (
+        new tail = add bits(a tail, b tail)
+      ) => a bit {
+        true = b bit {
+          true = [false] + bits plus one(new tail) ; carry one
+          false = [true] + new tail
+        }
+        false = [a bit] + new tail
+      }
+    }
+  }
+  bits minus one(bits to dec) = bits to dec {
+    empty = .([true], true)
+    nonempty(bit, tail) = bit {
+      true = .([false], false)
+      false = bits minus one(tail) (
+        (tail minus one, negative) -> .([true] + tail minus one, negative)
+      )
+    }
+  }
+
+  bits minus bits(a, b) = b {
+    empty = .(a, false)
+    nonempty(b bit, b tail) = b bit {
+      true = bits minus one(a) {
+        negative(new bits) = .(new bits.at(0) + bits plus bits(new bits.tail, b tail), true)
+        positive(new bits) = new bits {
+          empty = .([false] + b tail, true)
+          nonempty(new bit, new tail) = .([new bit] + bits minus bits(new bits.tail, b tail), false)
+        }             
+      }
+      false = a {
+        empty = .negative(b tail)
+        nonempty(a bit, a tail) = bits minus bits(a tail, b tail) (
+          (new tail, negative) -> .([a bit] + new tail, negative)
+        )
+      }
+    }
+  }
+
+  match denominator (x, y) = x.denominator bits == y.denominator bits {
+    true = .(x.numerator bits, y.numerator bits, x.denominator)
+    false = TODO 
+  }
+) => {
+  (-x) = {
+    numerator bits = x.numerator bits
+    denominator bits = x.denominator bits
+    negative = ! x.negative
+  }
+  
+  (|x|) = x.negative {
+    true = -x
+    false = x
+  }
+  
+  x.sign = x.negative {
+    true = .negative
+    false = x.zero {
+      true = .zero
+      false = .positive
+    }
+  }
+
+  (x + y) = x.negative {  
+    true = -((-x) + (-y))
+    false = y.negative {
+      true = x - y
+      false = match denominator(x, y) ((x bits, y bits, denominator bits) -> traits.number @ {
+        numerator bits = bits plus bits(x bits, y bits)
+        denominator bits = denominator bits
+        negative = false
+      })
+    }
+  }
+  
+  (x - y) = x.negative {
+    true = -(-x + y)
+    false = y.negative {
+      true = x + (-y)
+      false = match denominator (x, y, 
+        (x bits, y bits, denominator bits) -> bits minus bits(x bits, y bits) {
+          negative(bits) = .(bits, true)
+          positive(bits) = .(bits, false)
+        } ((numerator bits, negative) ->
+          traits.number @ { numerator bits, denominator bits, negative }
+        ) 
+      )
+    }
+  }
+}

@@ -1,7 +1,0 @@
-{
-  empty = {
-
-
-  }
-  fromCodePoint(x) = .string([x])
-}

@@ -1,0 +1,63 @@
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: "maven"
+apply plugin: "osgi"
+
+version = "0.1"
+group = "banjo"
+sourceCompatibility = "1.8"
+
+ext {
+	projectTitle = "Banjo Language Core Library"
+	projectName = "banjo-core-lib"
+	groupId = "banjo"
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+	maven {
+		url "https://repo.eclipse.org/content/repositories/eclipse-releases"
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ['src']
+		}
+	}
+	test {
+		java {
+			srcDirs = ['test']
+		}
+	}
+}
+
+jar {
+	version project.version
+	manifest {
+		name = 'Banjo Language Core Library'
+		instruction 'Bundle-ActivationPolicy', 'lazy'
+		instruction 'Bundle-Vendor', 'org.banjo-lang'
+	}
+}
+
+eclipse {
+  project {
+	natures 'org.eclipse.pde.PluginNature'
+	buildCommand 'org.eclipse.pde.ManifestBuilder'
+	buildCommand 'org.eclipse.pde.SchemaBuilder'
+  }
+}
+
+// Output MANIFEST.MF statically so eclipse can see it for plugin development
+task eclipsePluginManifest(dependsOn: jar) << {
+  file("META-INF").mkdirs()
+  jar.manifest.writeTo(file("META-INF/MANIFEST.MF"))
+}
+
+eclipseProject.dependsOn eclipsePluginManifest
+
