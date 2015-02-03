@@ -1,5 +1,1 @@
-traits.number @ {
-  numerator bits = []
-  denominator bits = []
-  negative = false
-}
+data.number([], [], false)

@@ -1,0 +1,4 @@
+(code points) -> {code points} @ {
+  (s1 + s2) = string from code points(s1.code points + s2.code points)
+  (s1 == s2) = s1.code points == s2.code points
+}

@@ -1,0 +1,80 @@
+bits(bits) ↦ {
+  (a + b) = a.bits {
+    empty = b
+    nonempty(a bit, a tail) = b.bits {
+      empty = a
+      nonempty(b bit, b tail) = (
+        new tail = bits(a tail) + bits(b tail)
+      ) ⇒ a bit {
+        true = b bit {
+          true = [false] + (bits(new tail) + bits([true])).bits ; carry one
+          false = [true] + new tail
+        }
+        false = [a bit] + new tail
+      }
+    }
+  }
+  bits minus one(bits) = bits {
+    empty = .([true], true)
+    nonempty(bit, tail) = bit {
+      true = tail {
+        nonempty(_) = .([false] + tail, false)
+        empty = .([], false) ; Don't leave zero bits on the end of the list
+      }
+      false = bits minus one(tail) (
+        (tail minus one, negative) ↦ .([true] + tail minus one, negative)
+      )
+    }
+  }
+
+  (x - y) = (
+    doc = "
+      Subtract two bit strings, returning the difference as a bit string plus
+      a boolean indicating whether the second number was larger than the first.
+      When the second number was larger than the first, the result will be the
+      difference between the first and the second, with the negative flag set true.
+    "
+    usage examples = [
+      bits([true]) - bits([true])        ((b,n) ↦ b.bits == [] && n == false)
+      bits([true, false]) - bits([true]) ((b,n) ↦ b.bits == [true] && n == false)
+      bits([true]) - bits([true, false]) ((b,n) ↦ b.bits == [true] && n == true)
+      bits([]) - bits([true, false])     ((b,n) ↦ b.bits == [true, false] && n == true)
+      bits([true,false,false]) - bits([true,false,true]) ((b,n) ↦ b.bits == [true] && n == true)
+    ]
+  ) ⇒ a.bits {
+    empty = .(b, true)
+    nonempty(a bit, a tail) = b.bits {
+      empty = .(a, false)
+      nonempty(b bit, b tail) = (bits(a tail) - bits(b tail)) ((tail diff, negative) ↦
+        negative {
+          false = .(a bit, b bit)
+          true = .(b bit, a bit)
+        } ((left bit, right bit) ↦ right bit {
+          true = left bit {
+            true = (tail diff - bits([true])) ((new tail diff, new negative) ↦
+              .(bits([false] + new tail diff.bits), new negative)
+            )
+            false = bits([true])
+          }
+          false = .([left bit])
+        })
+      )
+    }
+  }
+
+  (x * y) = (
+    doc = "Bit-wise multiplication."
+  ) ⇒ x.bits {
+    nonempty(bit, tail) = bit {
+      false = bits(tail) * y
+      z.true = y + bits(tail) * y
+    }
+    empty = x
+  }
+
+  (x == y) = (
+    doc = "True if both lists of bits are equal"
+  ) ⇒ x.bits == y.bits
+
+
+}

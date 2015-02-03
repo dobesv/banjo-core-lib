@@ -1,4 +1,4 @@
-.true @ {
+.true @ traits.total order @ {
   (! true) = false
   (true && x) = x
   (true || x) = true
@@ -7,4 +7,5 @@
   true.map(-> x) = [x]
   true.ordinal = 1
   (true == x) = x({ true, false })
+  (true < x) = false ; true is not less than any other boolean
 }
