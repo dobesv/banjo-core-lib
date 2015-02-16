@@ -6,7 +6,7 @@ list(variant) -> (
     of the list must also implement the same comparions.
   "
 ) ⇒ {
-  list.range(offset, length) = (
+  x.range(offset, length) = (
     doc = "
       Create a view of the list with a reduced range.
 
@@ -21,9 +21,9 @@ list(variant) -> (
       be empty.
     "
     usage examples = [[1,2,3,4,5].range(2,2) == [3,4]]
-  ) ⇒ list.range from(offset).range to(length)
+  ) ⇒ x.range from(offset).range to(length)
 
-  list.range from(start) = (
+  x.range from(start) = (
     doc = "
       Create a view of the list that skips some of the starting elements.
 
@@ -43,15 +43,15 @@ list(variant) -> (
       For example, `[1,2,3,4,5].range from(2) == [3,4,5]`
     "
   ) ⇒ start.sign {
-    positive = list {
+    positive = x {
       nonempty(_, etc) = etc.range from(start-1)
-      empty = lists.empty
+      empty = []
     }
-    negative = list.range from(max(0, list.length + n))
-    0 = list
+    negative = x.range from(max(0, x.length + n))
+    zero = x
   }
 
-  list.range to(limit) = (
+  x.range to(limit) = (
     doc = "
       Create a view of the list with a limited range.
 
@@ -63,14 +63,12 @@ list(variant) -> (
     "
     usage examples = [[1,2,3,4,5].range to(3) == [1,2,3]]
   ) ⇒ end.sign {
-    positive = list.class.mixin @ {
-      (visitor) = list {
-        nonempty(element, etc) = visitor.nonempty(element, etc.range to(n-1))
-        end = visitor.end
-      } 
+    positive = list.class.mixin @ (visitor) -> x {
+      nonempty(element, etc) = visitor.nonempty(element, etc.range to(n-1))
+      end = visitor.end
     }
     zero = lists.empty
-    negative = list.range to(max(0, list.length + limit))
+    negative = x.range to(max(0, x.length + limit))
   }
 
   list.at(n) = (
@@ -107,7 +105,7 @@ list(variant) -> (
     nonempty(head, tail) = list(.nonempty(mapping(head), tail.mapped(mapping)))
   }    
 
-  list.filtered(predicate) = (
+  x.filtered(predicate) = (
     "
       Create a view of the list containing only elements that \"pass\" the filter.  That is,
       for any element `e`, `predicate(e) == true`.
@@ -145,52 +143,52 @@ list(variant) -> (
     empty = initial state
   }
 
-  list.empty = (
-    doc = "Return true if this list is empty (has no elements), otherwise return false."
+  x.empty = (
+    "Return true if this list is empty (has no elements), otherwise return false."
     usage examples = [
       [].empty == true
       [1].empty == false
       [1,2,3].empty == false
     ]
-  ) ⇒ list({ empty = true, nonempty() = false })
+  ) ⇒ x { empty = true, nonempty() = false }
 
-  list.nonempty = (
-    doc = "Return true if the list has at least one element, otherwise return false."
+  x.nonempty = (
+    "Return true if the list has at least one element, otherwise return false."
     usage examples = [
       [1].nonempty == true
       [].nonempty == false
     ]
-  ) ⇒ list({ empty = false, nonempty() = true })
+  ) ⇒ x { empty = false, nonempty() = true }
 
-  list.without prefix(prefix) = (
-    doc = "If the list starts with the given prefix, return #suffix(rest of list).  Otherwise returns #not matched."
-  ) ⇒ prefix({
+  x.without prefix(prefix) = (
+    "If the list starts with the given prefix, return #suffix(rest of list).  Otherwise returns #not matched."
+  ) ⇒ prefix {
     ; Ran out of prefix, so all the elements must have matched
-    empty = .suffix(list)
+    empty = .suffix(x)
 
-    nonempty(prefix elt, prefix etc) = list({
+    nonempty(prefix elt, prefix etc) = x {
       ; Compare this element with the corresponding prefix element
-      nonempty(list elt, list etc) = (prefix elt == list elt)({
+      nonempty(list elt, list etc) = (prefix elt == list elt) {
         ; Elements are equal, continue with the remaining elements (if any)
         true = list etc.without prefix(prefix etc)
 
         ; Elements not equal
         false = .not matched
-      })
+      }
 
       ; Ran out of list
       empty = .not matched
-    })
-  })
+    }
+  }
 
-  list.starts with(prefix) = (
-    doc = "Return true if the list is at least as long as prefix and all elements in the list are equal (using `prefix element == list element`) up to the length of the prefix"
+  x.starts with(prefix) = (
+    "Return true if the list is at least as long as prefix and all elements in the list are equal (using `prefix element == list element`) up to the length of the prefix"
   ) ⇒ prefix {
     ; If we reach the end of the prefix, then it was a prefix
     empty = true
 
     ; Still at least one more element to check in the prefix
-    nonempty(prefix elt, prefix etc) = list {
+    nonempty(prefix elt, prefix etc) = x {
       nonempty(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with prefix etc)
 
       ; No element in the list to look at, the list is too short
@@ -198,29 +196,29 @@ list(variant) -> (
     }
   }
 
-  (list && result) = (
-    doc = "Return `result` if the `list` is nonempty, otherwise return `list` (which is the empty list)"
-  ) ⇒ list {
+  (x && result) = (
+    "Return `result` if the `list` is nonempty, otherwise return `list` (which is the empty list)"
+  ) ⇒ x {
     nonempty() = result
-    empty = list
+    empty = x
   }
 
-  (list || substitute) = (
-    doc = "Return `substitute` if the `list` is empty.  Otherwise return the list itself."
-  ) ⇒ list {
-    nonempty() = list
+  (x || substitute) = (
+    "Return `substitute` if the `list` is empty.  Otherwise return the list itself."
+  ) ⇒ x {
+    nonempty() = x
     empty = substitute
   }
 
-  (list ?: substitute) = (
-    doc = "Return `substitute` if the `list` is empty.  Otherwise return the first element."
-  ) ⇒ list {
+  (x ?: substitute) = (
+    "Return `substitute` if the `list` is empty.  Otherwise return the first element."
+  ) ⇒ x {
     nonempty(first) = first
     empty = substitute
   }
 
   list.flattened = (
-    doc = "
+    "
       Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists.
 
       Note that this is roughly equivalent to `list.sum([])`.
@@ -237,7 +235,7 @@ list(variant) -> (
   }
 
   list.sum(start) = (
-    doc = "
+    "
       Return the result of a `+` operation on all elements of the list and the `start` parameter (typically
       `0` or `[]` is used as the `start` value)
     "
@@ -257,12 +255,12 @@ list(variant) -> (
       elements passed to reach that tail.
     "
 
-    list with offsets(offset list, start offset) = list.class.mixin @ {
-      (visitor) = offset list({
+    list with offsets(offset list, start offset) = list.class.mixin @ (
+      (visitor) -> offset list({
         empty = offset list
-        nonempty(element, etc) = nonempty(element, list with offset(etc, start offset+1))
-      })
-      offset = offset
+        nonempty(element, etc) = list(.nonempty(element, list with offsets(etc, start offset+1)))
+      })) @ {
+      offset = start offset
       x.range to(n) = list with offsets(x:range to(n), start offset)
       x.mapped(mapping) = list with offsets(x:map(mapping), start offset)
     }
@@ -327,7 +325,7 @@ list(variant) -> (
 
   list.repeating = (
     doc = "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
-  ) ⇒ lists.unfold(x -> x { empty = list, nonempty(elt, etc) = etc })
+  ) ⇒ list { empty = list, nonempty(elt, etc) = list(.nonempty(elt, etc.repeating)) }
 
   (x == y) = (
     "

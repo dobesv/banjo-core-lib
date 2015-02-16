@@ -4,7 +4,7 @@
   (true || x) = true
   (true & x) = x
   (true | x) = x
-  true.map(-> x) = [x]
+  true.map(f) = [f()]
   true.ordinal = 1
   (true == x) = x({ true, false })
   (true < x) = false ; true is not less than any other boolean

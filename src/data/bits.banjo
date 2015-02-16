@@ -1,4 +1,4 @@
-bits(bits) ↦ {
+bits(bits) -> {
   (a + b) = a.bits {
     empty = b
     nonempty(a bit, a tail) = b.bits {
@@ -14,21 +14,22 @@ bits(bits) ↦ {
       }
     }
   }
-  bits minus one(bits) = bits {
+  
+  bits.minus one = bits {
     empty = .([true], true)
     nonempty(bit, tail) = bit {
       true = tail {
         nonempty(_) = .([false] + tail, false)
         empty = .([], false) ; Don't leave zero bits on the end of the list
       }
-      false = bits minus one(tail) (
+      false = tail.minus one (
         (tail minus one, negative) ↦ .([true] + tail minus one, negative)
       )
     }
   }
 
   (x - y) = (
-    doc = "
+    "
       Subtract two bit strings, returning the difference as a bit string plus
       a boolean indicating whether the second number was larger than the first.
       When the second number was larger than the first, the result will be the
@@ -41,14 +42,14 @@ bits(bits) ↦ {
       bits([]) - bits([true, false])     ((b,n) ↦ b.bits == [true, false] && n == true)
       bits([true,false,false]) - bits([true,false,true]) ((b,n) ↦ b.bits == [true] && n == true)
     ]
-  ) ⇒ a.bits {
-    empty = .(b, true)
-    nonempty(a bit, a tail) = b.bits {
-      empty = .(a, false)
-      nonempty(b bit, b tail) = (bits(a tail) - bits(b tail)) ((tail diff, negative) ↦
+  ) ⇒ x.bits {
+    empty = .(y, true)
+    nonempty(x bit, x tail) = y.bits {
+      empty = .(x, false)
+      nonempty(y bit, y tail) = (bits(x tail) - bits(y tail)) ((tail diff, negative) ↦
         negative {
-          false = .(a bit, b bit)
-          true = .(b bit, a bit)
+          false = .(x bit, y bit)
+          true = .(y bit, x bit)
         } ((left bit, right bit) ↦ right bit {
           true = left bit {
             true = (tail diff - bits([true])) ((new tail diff, new negative) ↦
@@ -63,7 +64,7 @@ bits(bits) ↦ {
   }
 
   (x * y) = (
-    doc = "Bit-wise multiplication."
+    "Bit-wise multiplication."
   ) ⇒ x.bits {
     nonempty(bit, tail) = bit {
       false = bits(tail) * y
@@ -73,7 +74,7 @@ bits(bits) ↦ {
   }
 
   (x == y) = (
-    doc = "True if both lists of bits are equal"
+    "True if both lists of bits are equal"
   ) ⇒ x.bits == y.bits
 
 
