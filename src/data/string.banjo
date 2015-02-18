@@ -1,4 +1,9 @@
-(code points) -> {code points} @ {
-  (s1 + s2) = string from code points(s1.code points + s2.code points)
+string(code points) ↦ (
+  "Basic core unicode string used for string literals"
+) => {code points} @ traits.total order @ {
+  (s1 + s2) = string(s1.code points + s2.code points)
   (s1 == s2) = s1.code points == s2.code points
+  (s1 < s2) = s1.code points < s2.code points
+
+  s.with code points(new code points) = string(new code points)
 }

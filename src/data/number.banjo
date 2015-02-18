@@ -1,4 +1,4 @@
-number(n bits, d bits, negative) ↦ traits.total order @ (
+number(n bits, d bits, negative) ↦ (
   doc = "
     Implementation of core numbers.
 
@@ -35,53 +35,59 @@ number(n bits, d bits, negative) ↦ traits.total order @ (
       If either number has a zero denominator then the result will
       be `.([],[],[])`.
     "
-  ) ⇒ x.d == y.d {
-    true = .(x.n, y.n, x.denominator)
-    false = (x.not a number || y.not a number) {
-      true = .([], [], [])
-      false = TODO
-    }
-  }
-
+  ) ⇒ (
+    if (x.d == y.d) then (.(x.n, y.n, x.d)) else
+    if (x.not a number || y.not a number) then (.([], [], [])) else
+    .(x.n * y.d, y.n * x.d, x.d * y.d) ; 2/3 + 3/4 = 8/12 + 9/12
+  )
+  
+  bits = data.bits
+  
+) ⇒ traits.total order @ {
   n = bits(n bits)
   d = bits(d bits)
-) ⇒ {
+  
   (-x) = x @ { negative = ! x.negative }
 
   (|x|) = x @ { negative = false }
 
-  x.zero = (
+  x.is zero = (
     doc = "
       True if the number is zero.
 
       Zero is represented by all zero bits in the numerator, and
       any non-empty denominator.
     "
-  ) ⇒ bits are all zero(x.n) && !x.not a number
+  ) ⇒ x.n.is zero && !x.not a number
 
-  x.not a number = (
+  x.is not a number = (
     doc = "
       True if the number if the result of an invalid mathematical
       operation, such as division by zero.
 
       This is indicated by a zero/empty denominator.
     "
-  ) ⇒ bits are all zero(x.d)
+  ) ⇒ x.d.is zero
 
   x.sign = (
     doc = "
       Return `.positive`, `.negative`, `.zero`, or `.not a number`
       depending on the sign / status of this number.
     "
-  ) ⇒ [.zero, .not a number, .negative].filter(p -> p(x)) ?: .positive
+  ) ⇒ (
+    if (x.is positive) then (.positive) else
+    if (x.is negative) then (.negative) else
+    if (x == 0)        then (.zero)     else
+    .not a number
+  )
 
-  x.positive = (
+  x.is positive = (
     doc = "
       Return `true` if this number is positive.
     "
   ) ⇒ !x.negative
 
-  x.even = (
+  x.is even = (
     doc = "
       Return `true` if this number is even.
 
@@ -90,7 +96,7 @@ number(n bits, d bits, negative) ↦ traits.total order @ (
     "
   ) ⇒ x.d == [true] && x.n.at(0) == [false]
 
-  x.odd = (
+  x.is odd = (
     doc = "
       Return `true` if this number is odd.
 
@@ -101,9 +107,7 @@ number(n bits, d bits, negative) ↦ traits.total order @ (
 
   (x == y) = (
     doc = "Return `true` if both numbers are equal."
-  ) ⇒ (
-    (x.negative == y.negative) && (x - y) == 0
-  )
+  ) ⇒ (x.is negative == y.is negative) && (x - y) == 0
 
   (x < y) = (
     doc = "Return `true` if this number is less than the other."
@@ -115,44 +119,35 @@ number(n bits, d bits, negative) ↦ traits.total order @ (
      -1 <  0 == true
       0 < -1 == false
     ]
-  ) ⇒ (x.negative == y.negative) {
-    false = x.negative ; If they're not both negative, the negative one must be less
-    true = (x - y).negative
-  }
-
-
+  ) ⇒ if (x.is negative == y.is negative) then ((x - y).is negative) else (x.is negative)
 
   (x + y) = (
     doc = "Return the sum of the two numbers."
-  ) ⇒ x.negative {
-    true = -(-x - y)
-    false = y.negative {
-      true = x - y
-      false = match denominator(x, y) ((x bits, y bits, d) -> number(
-        bit sum(x bits, y bits)
-        d
-        false
-      ))
-    }
-  }
-
+  ) ⇒ (
+    if(x.is negative) then (-(-x - y)) else
+    if(y.is negative) then (x - y)     else
+    match denominator(x, y) ((x bits, y bits, d) -> number(
+      x bits + y bits
+      d
+      false
+    ))
+  )
+  
   (x - y) = (
     doc = "
       Return the a number that, when added to `y` will give `x`.
-
+      
       If either number is `NaN`, or both numbers are ∞ or -∞ returns `NaN`.
     "
-  ) ⇒ x.negative {
-    true = -(-x + y)
-    false = y.negative {
-      true = x + (-y)
-      false = match denominator (x, y,
-        (x bits, y bits, d) -> bits minus bits(x bits, y bits) ((n, negative) ->
-          number(n, d, negative)
-        )
+  ) ⇒ (
+    if (x.negative) then (-(-x + y)) else
+    if (y.negative) then (x + (-y)) else
+    match denominator (x, y,
+      (x bits, y bits, d) -> (x bits - y bits) ((n, negative) ->
+        number(n, d, negative)
       )
-    }
-  }
+    )
+  )
 
   (x * y) = (
     doc = "

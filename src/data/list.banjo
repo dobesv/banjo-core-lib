@@ -47,7 +47,7 @@ list(variant) -> (
       nonempty(_, etc) = etc.range from(start-1)
       empty = []
     }
-    negative = x.range from(max(0, x.length + n))
+    negative = x.range from(max(0, x.length + start))
     zero = x
   }
 
@@ -62,18 +62,18 @@ list(variant) -> (
       `limit`, essentially requesting all but the last `-limit` elements.
     "
     usage examples = [[1,2,3,4,5].range to(3) == [1,2,3]]
-  ) ⇒ end.sign {
-    positive = list.class.mixin @ (visitor) -> x {
-      nonempty(element, etc) = visitor.nonempty(element, etc.range to(n-1))
-      end = visitor.end
+  ) ⇒ limit.sign {
+    positive = x {
+      nonempty(element, etc) = list(.nonempty(element, etc.range to(limit - 1)))
+      empty = x
     }
-    zero = lists.empty
+    zero = x
     negative = x.range to(max(0, x.length + limit))
   }
 
   list.at(n) = (
     doc = "
-      Return a view of the list including only the element found after skipping `n` elements.
+      Return a view of the list including only a single element after skipping `n` elements.
 
       If `n` is negative, the effective offset is the length of the list plus `n` - allowing a negative
       offset to work back from the end of the list.
@@ -92,17 +92,17 @@ list(variant) -> (
     ]
   ) ⇒ list.range(n, 1)
 
-  x.mapped(mapping) = (
+  x.mapped(mapping function) = (
     doc = "
-      Create a view of the list where each elements are replaced with their corresponding value in the given
-      mapping.
+      Create a view of the list where each elements are replaced with their corresponding 
+      value in the given mapping function.
     "
     usage examples = [
       [1,2,3,4,5].mapped(x -> x*x) == [1, 2*2, 3*3, 4*4, 5*5]
     ]
   ) ⇒ x {
     empty = x
-    nonempty(head, tail) = list(.nonempty(mapping(head), tail.mapped(mapping)))
+    nonempty(head, tail) = list(.nonempty(mapping function(head), tail.mapped(mapping function)))
   }    
 
   x.filtered(predicate) = (
