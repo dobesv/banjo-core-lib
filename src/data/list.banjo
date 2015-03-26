@@ -1,31 +1,28 @@
-list(variant) -> (
-  doc = "
+list(variant) ↦ (
+  "
     The parameter should be `.nonempty(head, tail)` for all lists except the empty list.
-    
+
     Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
     of the list must also implement the same comparions.
   "
-) ⇒ {
-  x.range(offset, length) = (
-    doc = "
-      Create a view of the list with a reduced range.
-
-      If the list has fewer than `offset+limit` elements, the resulting
-      list will have fewer than `limit` elements in it.
-
-      Any fractional part of the `offset` or `length` will be ignored.
-
-      If the `offset` is less than or equal to zero no offset will be applied.
-
-      If the `length` is less than of equal to zero the resulting list will
-      be empty.
+) ⇒ variant @ {
+  x.slice(start, end) = (
     "
-    usage examples = [[1,2,3,4,5].range(2,2) == [3,4]]
-  ) ⇒ x.range from(offset).range to(length)
+      Return elements from start (inclusive) to end (exclusive).
 
-  x.range from(start) = (
-    doc = "
-      Create a view of the list that skips some of the starting elements.
+      Negative offsets will count from the end of the list.
+    "
+    usage examples = [[1,2,3,4,5].slice(2,2) == [3,4]]
+  ) ⇒ (
+    if(start.is negative) then(x.slice(max(0, start + x.length), end)) else
+    if(end.is negative) then(x.slice(start, max(0, end + x.length))) else
+    x.from(start).to(end-start)
+  )
+
+  x.from(start) = (
+    "
+      Return a list of elements of this list after skipping some
+      elements.
 
       If the list has fewer than `offset` elements, the resulting
       list will be empty.
@@ -40,20 +37,22 @@ list(variant) -> (
       list.  If `-offset` is greater than the number of elements in the list,
       the list is returned as-is.
 
-      For example, `[1,2,3,4,5].range from(2) == [3,4,5]`
+      For example, `[1,2,3,4,5].from(2) == [3,4,5]`
     "
-  ) ⇒ start.sign {
-    positive = x {
-      nonempty(_, etc) = etc.range from(start-1)
-      empty = []
+  ) ⇒ (
+    if(start.is negative) then(x.from(max(0, start + x.length))) else
+    if(start.is zero) then(x) else
+    x {
+      nonempty(elt, etc) = etc.from(start-1)
+      empty = x
     }
-    negative = x.range from(max(0, x.length + start))
-    zero = x
-  }
 
-  x.range to(limit) = (
-    doc = "
-      Create a view of the list with a limited range.
+  )
+
+  x.to(limit) = (
+    "
+      Return a list containing elements at the start of this list up to `limit`
+      elements.
 
       If the list already has fewer than `limit` elements, this has no effect.  A
       zero `limit` will result in an empty list.
@@ -61,18 +60,18 @@ list(variant) -> (
       A negative `limit` will be added to the length of the list to calculate an effective
       `limit`, essentially requesting all but the last `-limit` elements.
     "
-    usage examples = [[1,2,3,4,5].range to(3) == [1,2,3]]
+    usage examples = [[1,2,3,4,5].to(3) == [1,2,3]]
   ) ⇒ limit.sign {
     positive = x {
-      nonempty(element, etc) = list(.nonempty(element, etc.range to(limit - 1)))
+      nonempty(element, etc) = list(.nonempty(element, etc.to(limit - 1)))
       empty = x
     }
     zero = x
-    negative = x.range to(max(0, x.length + limit))
+    negative = x.to(max(0, x.length + limit))
   }
 
   list.at(n) = (
-    doc = "
+    "
       Return a view of the list including only a single element after skipping `n` elements.
 
       If `n` is negative, the effective offset is the length of the list plus `n` - allowing a negative
@@ -93,8 +92,8 @@ list(variant) -> (
   ) ⇒ list.range(n, 1)
 
   x.mapped(mapping function) = (
-    doc = "
-      Create a view of the list where each elements are replaced with their corresponding 
+    "
+      Create a view of the list where each elements are replaced with their corresponding
       value in the given mapping function.
     "
     usage examples = [
@@ -103,7 +102,7 @@ list(variant) -> (
   ) ⇒ x {
     empty = x
     nonempty(head, tail) = list(.nonempty(mapping function(head), tail.mapped(mapping function)))
-  }    
+  }
 
   x.filtered(predicate) = (
     "
@@ -120,7 +119,7 @@ list(variant) -> (
   }
 
   x.right folded(function, initial state) = (
-    doc = "
+    "
       Apply the given function to each element while threading a state through
       each call.  The function accepts an object with left and right values and
       returns a new value that may either be used as a left or right value for
@@ -143,16 +142,16 @@ list(variant) -> (
     empty = initial state
   }
 
-  x.empty = (
+  x.is empty = (
     "Return true if this list is empty (has no elements), otherwise return false."
     usage examples = [
-      [].empty == true
-      [1].empty == false
-      [1,2,3].empty == false
+      [].is empty == true
+      [1].is empty == false
+      [1,2,3].is empty == false
     ]
   ) ⇒ x { empty = true, nonempty() = false }
 
-  x.nonempty = (
+  x.is nonempty = (
     "Return true if the list has at least one element, otherwise return false."
     usage examples = [
       [1].nonempty == true
@@ -217,7 +216,7 @@ list(variant) -> (
     empty = substitute
   }
 
-  list.flattened = (
+  x.flattened = (
     "
       Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists.
 
@@ -226,12 +225,9 @@ list(variant) -> (
     usage examples = [
       [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
     ]
-  ) ⇒  
-  list.class.mixin @ {
-    chain(x) = list({
-      empty = x.empty
-      nonempty(sublist, etc) = (sublist + etc.flattened)(x)
-    })
+  ) ⇒ x {
+    empty = x
+    nonempty(elt, etc) = elt + etc.flattened
   }
 
   list.sum(start) = (
@@ -250,7 +246,7 @@ list(variant) -> (
 
 
   list.with offsets = (
-    doc = "
+    "
       Return a view of the list where the list and its tails have an extra method `offset` returning the number of
       elements passed to reach that tail.
     "
@@ -261,13 +257,13 @@ list(variant) -> (
         nonempty(element, etc) = list(.nonempty(element, list with offsets(etc, start offset+1)))
       })) @ {
       offset = start offset
-      x.range to(n) = list with offsets(x:range to(n), start offset)
+      x.to(n) = list with offsets(x:to(n), start offset)
       x.mapped(mapping) = list with offsets(x:map(mapping), start offset)
     }
   ) ⇒ list with offsets(list, 0)
 
   list.left folded(function, initial state) = (
-    doc = "
+    "
       Apply the given function to each element while threading a state through
       each call.  The function accepts an element and a state and returns a new
       state.
@@ -292,7 +288,7 @@ list(variant) -> (
   ) ⇒ helper(list, {left = initial state})
 
   list.length = (
-    doc = "
+    "
       Calculate the length of the list.
 
       For example: `[1,2,3].length == 3`
@@ -300,7 +296,7 @@ list(variant) -> (
   ) ⇒ list.left folded({right} -> 1 + right, 0)
 
   (x ∈ y) = (
-    doc = "Return true if `x == element` for any `element` in `list`."
+    "Return true if `x == element` for any `element` in `list`."
     usage examples = [
        "apple" ∈ ["apple", "pear", "banana"] == true
        "orange" ∈ ["apple", "pear", "banana"] == true
@@ -312,7 +308,7 @@ list(variant) -> (
 
 
   (x + y) = (
-    doc = "
+    "
       Return a list with all the elements of this list followed by all the elements of the other list.
 
       If the suffix is an infinite list, the result will also be an infinite list.
@@ -324,7 +320,7 @@ list(variant) -> (
 
 
   list.repeating = (
-    doc = "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
+    "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
   ) ⇒ list { empty = list, nonempty(elt, etc) = list(.nonempty(elt, etc.repeating)) }
 
   (x == y) = (
@@ -339,11 +335,11 @@ list(variant) -> (
       ([1,2,3] == []) == false
     ]
   ) ⇒ x {
-    empty = y.empty
+    empty = y.is empty
     nonempty(x head, x tail) = y {
       empty = false
       nonempty(y head, y tail) =
-        (x head == y head) && 
+        (x head == y head) &&
         (x tail == y tail)
     }
   }
@@ -373,13 +369,13 @@ list(variant) -> (
       3. The element after any common prefix is compared using `<`, and the result is returned.
     "
   ) ⇒ x.strip common prefix(y) ((xx, yy) -> xx {
-      empty = ! yy.empty ; Empty list is less than any list but the empty list
+      empty = ! yy.is empty ; Empty list is less than any list but the empty list
       nonempty(x elt) = yy {
         empty = false ; We cannot be less than the empty list
         nonempty(y elt) = x elt < y elt
       }
   })
-  
+
   (x > y) = (
     "
       True if the first list is greater than the second.
@@ -411,7 +407,7 @@ list(variant) -> (
         nonempty(y elt) = x elt < y elt ; Only have to check <, we already checked ==
       }
   })
-  
+
   (x ≥ y) = (
     "
       True if the first list is less than or equal the second.
@@ -421,7 +417,7 @@ list(variant) -> (
       3. The element after any common prefix is compared using `>`, and the result is returned.
     "
   ) ⇒ x.strip common prefix(y) ((xx, yy) ↦ xx {
-      empty = yy.empty ; [] is only ≥ []
+      empty = yy.is empty ; [] is only ≥ []
       nonempty(x elt) = yy {
         empty = true ; All lists are ≥ []
         nonempty(y elt) = x elt > y elt ; Only have to check >, we already checked ==

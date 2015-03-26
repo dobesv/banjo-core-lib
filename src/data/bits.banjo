@@ -1,4 +1,6 @@
-bits(bits) -> {
+bits(bits list) -> {
+  bits = bits list
+  
   (a + b) = a.bits {
     empty = b
     nonempty(a bit, a tail) = b.bits {
@@ -77,5 +79,5 @@ bits(bits) -> {
     "True if both lists of bits are equal"
   ) ⇒ x.bits == y.bits
 
-
+  x.is zero = x.bits.is empty
 }

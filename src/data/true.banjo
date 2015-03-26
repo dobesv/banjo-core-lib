@@ -1,0 +1,12 @@
+.true @ traits.total order @ {
+  (! true) = false
+  (true && x) = x
+  (true || x) = true
+  (true & x) = x
+  (true | x) = x
+  true.map(f) = [f(true)]
+  true.ordinal = 1
+  (true == x) = x({ true, false })
+  (true < x) = false ; true is not less than any other boolean
+  string representation = "true"
+}

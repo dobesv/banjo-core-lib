@@ -6,4 +6,6 @@ string(code points) ↦ (
   (s1 < s2) = s1.code points < s2.code points
 
   s.with code points(new code points) = string(new code points)
+
+  s.string representation = s
 }

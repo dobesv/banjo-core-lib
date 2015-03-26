@@ -1,0 +1,4 @@
+(cond) ↦ (then) ↦ (else) ↦ cond {
+    true = then
+    false = else 
+}

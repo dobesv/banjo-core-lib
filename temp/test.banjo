@@ -1,3 +1,0 @@
-(
-  foo bar(x) = x + 1 + foo bar(2) 
-) ⇒ true

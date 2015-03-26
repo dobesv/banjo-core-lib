@@ -1,0 +1,27 @@
+.false @ traits.total order @ {
+  (! false) = (
+    usage examples = [
+      ! false == true
+      true == !false
+      (!false || false) == true
+    ]
+  ) ⇒ true
+  (false && x) = (
+    usage examples = [ (false && true) == false ]
+  ) ⇒ false
+  (false || x) = (
+    usage examples = [
+      (false || false) == false
+      (false || true) == true
+      (false || []) == []
+   ]
+  ) ⇒ x
+  (false & x) = false
+  (false | x) = x
+  false.map(f) = []
+  false.ordinal = 0
+  (false == x) = x { false = true, true = false }
+  (false < x) = x ; False is less than true
+
+  string representation = "false"
+}

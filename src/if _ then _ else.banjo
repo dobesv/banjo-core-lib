@@ -1,4 +1,1 @@
-(cond) ↦ (then) ↦ (else) ↦ cond {
-    true = then
-    false = else 
-}
+functions.if _ then _ else
