@@ -10,10 +10,7 @@
   list.unfold(first, f) = (
     "Create a list using an initial element and a function that takes an element and returns the next one"
   ) ⇒ list.node(first, list.unfold(f(first), f)) @ {
-    label =
-        "list.unfold("+
-            first + ", "+
-            f + ")"
+    label = "list.unfold(" + first + ", " + f + ")"
   }
 
   label = "data.list"
@@ -24,7 +21,7 @@
     uses `.empty`.
 
     Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
-    of the list must also implement the same comparions.
+    of the list must also implement the same comparisons.
   "
 ) ⇒ {
   if = variant
