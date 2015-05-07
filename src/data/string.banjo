@@ -1,5 +1,5 @@
 string(code points) ↦ (
-  "Basic core unicode string used for string literals"
+  "Basic core unicode string, made from a list of unicode code points"
 ) => {code points} @ traits.total order @ {
   (s1 + s2) = string(s1.code points + s2.code points)
   (s1 == s2) = s1.code points == s2.code points
@@ -7,5 +7,5 @@ string(code points) ↦ (
 
   s.with code points(new code points) = string(new code points)
 
-  s.string representation = s
+  s.label = s
 }

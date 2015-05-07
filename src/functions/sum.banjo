@@ -1,0 +1,2 @@
+"Take the sum of two arguments"
+sum(a, b) -> a + b

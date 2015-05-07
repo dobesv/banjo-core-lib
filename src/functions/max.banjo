@@ -1,3 +1,2 @@
 ("Return the greater of its two arguments, or the second if the two are equal.") ⇒
-{ string representation = "max(a,b)" } @
-(a, b) -> if (a > b) then (a) else (b)
+max(a, b) -> if (a > b) then (a) else (b)

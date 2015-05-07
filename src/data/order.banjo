@@ -1,0 +1,29 @@
+{
+  ascending = {
+    if = .ascending
+    label = "data.order.ascending"
+  }
+  descending = {
+    if = .descending
+    label = "data.order.descending"
+  }
+  equal = {
+    if = .equal
+    label = "data.order.equal"
+  }
+  undefined = {
+    if = .undefined
+    label = "data.order.undefined"
+  }
+  
+  from sign(sign) = (
+    "Get an ordering relative to zero from a sign value"
+  ) ⇒ sign.{ 
+    negative = ascending
+    positive = descending
+    zero = equal
+    undefined = undefined
+  }
+   
+  label = "data.order"
+}

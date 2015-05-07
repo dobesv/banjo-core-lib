@@ -1,4 +1,5 @@
-.true @ traits.total order @ {
+({true, false} = data) ⇒ traits.total order @ {
+  if = .true
   (! true) = false
   (true && x) = x
   (true || x) = true
@@ -6,7 +7,7 @@
   (true | x) = x
   true.map(f) = [f(true)]
   true.ordinal = 1
-  (true == x) = x({ true, false })
-  (true < x) = false ; true is not less than any other boolean
-  string representation = "true"
+  (true == x) = x.if { true = true, false = false }
+  (true < x) = false # true is not less than any other boolean
+  label = "true"
 }

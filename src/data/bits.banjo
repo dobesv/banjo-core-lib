@@ -9,7 +9,7 @@ bits(bits list) -> {
         new tail = bits(a tail) + bits(b tail)
       ) ⇒ a bit {
         true = b bit {
-          true = [false] + (bits(new tail) + bits([true])).bits ; carry one
+          true = [false] + (bits(new tail) + bits([true])).bits # carry one
           false = [true] + new tail
         }
         false = [a bit] + new tail
@@ -22,7 +22,7 @@ bits(bits list) -> {
     nonempty(bit, tail) = bit {
       true = tail {
         nonempty(_) = .([false] + tail, false)
-        empty = .([], false) ; Don't leave zero bits on the end of the list
+        empty = .([], false) # Don't leave zero bits on the end of the list
       }
       false = tail.minus one (
         (tail minus one, negative) ↦ .([true] + tail minus one, negative)

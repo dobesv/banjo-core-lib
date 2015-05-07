@@ -1,1 +1,0 @@
-(elt, tail) -> data.list(.nonempty(elt, tail))

@@ -1,4 +1,5 @@
-.false @ traits.total order @ {
+traits.total order @ {
+  if = .false
   (! false) = (
     usage examples = [
       ! false == true
@@ -18,10 +19,11 @@
   ) ⇒ x
   (false & x) = false
   (false | x) = x
+  (false ?: x) = x
   false.map(f) = []
   false.ordinal = 0
-  (false == x) = x { false = true, true = false }
-  (false < x) = x ; False is less than true
+  (false == x) = x.if { false = true, true = false }
+  (false < x) = x # False is less than true
 
-  string representation = "false"
+  label = "false"
 }

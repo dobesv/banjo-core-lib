@@ -1,11 +1,34 @@
-list(variant) ↦ (
+{
+  list.empty = (
+    "The empty list"
+  ) ⇒ list(.empty) @ { label = "[]" }
+
+  list.node(first, tail) = (
+    "Create a list by prepending a single element to another list"
+  ) ⇒ list(.node(first, tail))
+
+  list.unfold(first, f) = (
+    "Create a list using an initial element and a function that takes an element and returns the next one"
+  ) ⇒ list.node(first, list.unfold(f(first), f)) @ {
+    label =
+        "list.unfold("+
+            first + ", "+
+            f + ")"
+  }
+
+  label = "data.list"
+
+} @ list(variant) ↦ (
   "
-    The parameter should be `.nonempty(head, tail)` for all lists except the empty list.
+    The parameter should be `.node(head, tail)` for all lists except the empty list, which
+    uses `.empty`.
 
     Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
     of the list must also implement the same comparions.
   "
-) ⇒ variant @ {
+) ⇒ {
+  if = variant
+
   x.slice(start, end) = (
     "
       Return elements from start (inclusive) to end (exclusive).
@@ -42,8 +65,8 @@ list(variant) ↦ (
   ) ⇒ (
     if(start.is negative) then(x.from(max(0, start + x.length))) else
     if(start.is zero) then(x) else
-    x {
-      nonempty(elt, etc) = etc.from(start-1)
+    x.if {
+      node(elt, etc) = etc.from(start-1)
       empty = x
     }
 
@@ -61,13 +84,14 @@ list(variant) ↦ (
       `limit`, essentially requesting all but the last `-limit` elements.
     "
     usage examples = [[1,2,3,4,5].to(3) == [1,2,3]]
-  ) ⇒ limit.sign {
-    positive = x {
-      nonempty(element, etc) = list(.nonempty(element, etc.to(limit - 1)))
+  ) ⇒ limit.sign.if {
+    positive = x.if {
+      node(element, etc) = list.node(element, etc.to(limit - 1))
       empty = x
     }
     zero = x
     negative = x.to(max(0, x.length + limit))
+    undefined = []
   }
 
   list.at(n) = (
@@ -99,9 +123,9 @@ list(variant) ↦ (
     usage examples = [
       [1,2,3,4,5].mapped(x -> x*x) == [1, 2*2, 3*3, 4*4, 5*5]
     ]
-  ) ⇒ x {
+  ) ⇒ x.if {
     empty = x
-    nonempty(head, tail) = list(.nonempty(mapping function(head), tail.mapped(mapping function)))
+    node(head, tail) = list.node(mapping function(head), tail.mapped(mapping function))
   }
 
   x.filtered(predicate) = (
@@ -109,14 +133,48 @@ list(variant) ↦ (
       Create a view of the list containing only elements that \"pass\" the filter.  That is,
       for any element `e`, `predicate(e) == true`.
     "
-    usage examples = [[1,2,3,4].filtered(.odd) == [1,3]]
-  ) ⇒ x {
+    usage examples = [[1,2,3,4].filtered(.is odd) == [1,3]]
+  ) ⇒ x.if {
     empty = x
-    nonempty(head, tail) = predicate(head) {
+    node(head, tail) = predicate(head).if {
       z.false = tail.filtered(predicate)
-      z.true = list(.nonempty(head, z.false))
+      z.true = list.node(head, z.false)
     }
   }
+
+
+  x.zipped with(y) = (
+    "Create a list of matching pairs, one from each list.  The list will contain as many
+     element as the shorter of the two lists."
+  ) ⇒ x.if {
+    empty = x
+    node(x head, x tail) = y.if {
+      empty = y
+      node(y head, y tail) = list.node(
+        .(x head, y head),
+        x tail.zipped with(y tail)
+      )
+    }
+  }
+
+  x.none(predicate) = (
+    "Return true if there are no elements in the list for which `predicate(element) == true`"
+
+    usage examples = [
+      [1,-2,3,-4].none(.is positive) == false
+      [1,-2,3,-4].none(.is not a number) == true
+    ]
+  ) ⇒ x.filtered(predicate).is empty
+
+  x.all(predicate) = (
+    "Return true if there are no elements in the list for which `predicate(element) == false`"
+
+    usage examples = [
+        [1,2,3,4].all(.is positive) == true
+        [-1,-2,-3].all(.is negative) == true
+        [1, -2, 3].all(.is positive) == false
+    ]
+  ) ⇒ x.none(elt -> ! predicate(elt))
 
   x.right folded(function, initial state) = (
     "
@@ -137,8 +195,8 @@ list(variant) ↦ (
     usage examples = (f({left,right}) = (left + right)) ⇒ [
       [1,2,3,4,5].reverse folded(f,0) == f({left=0,right=f({left=1,right=f({left=2,right=f({left=3,right=f({left=4,right=5})})})})}) == (0+(1+(2+(3+(4+5))))) == 15
     ]
-  ) ⇒ x {
-    nonempty(head, tail) = function({left = initial state, right = tail.right folded(function, head)})
+  ) ⇒ x.if {
+    node(head, tail) = function({left = initial state, right = tail.right folded(function, head)})
     empty = initial state
   }
 
@@ -149,7 +207,7 @@ list(variant) ↦ (
       [1].is empty == false
       [1,2,3].is empty == false
     ]
-  ) ⇒ x { empty = true, nonempty() = false }
+  ) ⇒ x.if { empty = true, node() = false }
 
   x.is nonempty = (
     "Return true if the list has at least one element, otherwise return false."
@@ -157,62 +215,62 @@ list(variant) ↦ (
       [1].nonempty == true
       [].nonempty == false
     ]
-  ) ⇒ x { empty = false, nonempty() = true }
+  ) ⇒ x.if { empty = false, node() = true }
 
   x.without prefix(prefix) = (
-    "If the list starts with the given prefix, return #suffix(rest of list).  Otherwise returns #not matched."
-  ) ⇒ prefix {
-    ; Ran out of prefix, so all the elements must have matched
+    "If the list starts with the given prefix, return `.suffix(rest of list)`.  Otherwise returns `.not matched`."
+  ) ⇒ prefix.if {
+    # Ran out of prefix, so all the elements must have matched
     empty = .suffix(x)
 
-    nonempty(prefix elt, prefix etc) = x {
-      ; Compare this element with the corresponding prefix element
-      nonempty(list elt, list etc) = (prefix elt == list elt) {
-        ; Elements are equal, continue with the remaining elements (if any)
+    node(prefix elt, prefix etc) = x.if {
+      # Compare this element with the corresponding prefix element
+      node(list elt, list etc) = (prefix elt == list elt).if {
+        # Elements are equal, continue with the remaining elements (if any)
         true = list etc.without prefix(prefix etc)
 
-        ; Elements not equal
+        # Elements not equal
         false = .not matched
       }
 
-      ; Ran out of list
+      # Ran out of list
       empty = .not matched
     }
   }
 
   x.starts with(prefix) = (
     "Return true if the list is at least as long as prefix and all elements in the list are equal (using `prefix element == list element`) up to the length of the prefix"
-  ) ⇒ prefix {
-    ; If we reach the end of the prefix, then it was a prefix
+  ) ⇒ prefix.if {
+    # If we reach the end of the prefix, then it was a prefix
     empty = true
 
-    ; Still at least one more element to check in the prefix
-    nonempty(prefix elt, prefix etc) = x {
-      nonempty(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with prefix etc)
+    # Still at least one more element to check in the prefix
+    node(prefix elt, prefix etc) = x.if {
+      node(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with prefix etc)
 
-      ; No element in the list to look at, the list is too short
+      # No element in the list to look at, the list is too short
       empty = false
     }
   }
 
   (x && result) = (
     "Return `result` if the `list` is nonempty, otherwise return `list` (which is the empty list)"
-  ) ⇒ x {
-    nonempty() = result
+  ) ⇒ x.if {
+    node() = result
     empty = x
   }
 
   (x || substitute) = (
     "Return `substitute` if the `list` is empty.  Otherwise return the list itself."
-  ) ⇒ x {
-    nonempty() = x
+  ) ⇒ x.if {
+    node() = x
     empty = substitute
   }
 
   (x ?: substitute) = (
     "Return `substitute` if the `list` is empty.  Otherwise return the first element."
-  ) ⇒ x {
-    nonempty(first) = first
+  ) ⇒ x.if {
+    node(first) = first
     empty = substitute
   }
 
@@ -225,9 +283,9 @@ list(variant) ↦ (
     usage examples = [
       [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
     ]
-  ) ⇒ x {
+  ) ⇒ x.if {
     empty = x
-    nonempty(elt, etc) = elt + etc.flattened
+    node(elt, etc) = elt + etc.flattened
   }
 
   list.sum(start) = (
@@ -252,10 +310,11 @@ list(variant) ↦ (
     "
 
     list with offsets(offset list, start offset) = list.class.mixin @ (
-      (visitor) -> offset list({
-        empty = offset list
-        nonempty(element, etc) = list(.nonempty(element, list with offsets(etc, start offset+1)))
-      })) @ {
+        (visitor) -> offset list .if {
+          empty = offset list
+          node(element, etc) = list.node(element, list with offsets(etc, start offset+1))
+        }
+      ) @ {
       offset = start offset
       x.to(n) = list with offsets(x:to(n), start offset)
       x.mapped(mapping) = list with offsets(x:map(mapping), start offset)
@@ -264,8 +323,8 @@ list(variant) ↦ (
 
   list.left folded(function, initial state) = (
     "
-      Apply the given function to each element while threading a state through
-      each call.  The function accepts an element and a state and returns a new
+      Apply the given `function` to each element while threading a state through
+      each call.  The `function` accepts an element and a state and returns a new
       state.
 
       The `initial value` is used to ensure there is always a value to return
@@ -273,7 +332,7 @@ list(variant) ↦ (
 
       This fold is left-associative.
 
-      The final function value is returned.  For an empty list, the `initial state` is
+      The final function result is returned.  For an empty list, the `initial state` is
       returned.
     "
     usage examples = (f({left,right}) = (left + right)) ⇒ [
@@ -281,10 +340,10 @@ list(variant) ↦ (
       [1,2,3,4,5].folded(f,0) == f({left=f({left=f({left=f({left=f({left=0,right=1}),right=2}),right=3}),right=4}),right=5})
     ]
 
-    helper(tail, p) = tail({
-      nonempty(element, tail tail) = helper(tail tail, {left = function(p @ {right=element})})
+    helper(tail, p) = tail.if {
+      node(element, tail tail) = helper(tail tail, {left = function(p @ {right=element})})
       empty = p.left
-    })
+    }
   ) ⇒ helper(list, {left = initial state})
 
   list.length = (
@@ -293,6 +352,10 @@ list(variant) ↦ (
 
       For example: `[1,2,3].length == 3`
     "
+    usage examples = [
+      [1,2,3].length == 4
+      [].length == 0
+    ]
   ) ⇒ list.left folded({right} -> 1 + right, 0)
 
   (x ∈ y) = (
@@ -301,9 +364,9 @@ list(variant) ↦ (
        "apple" ∈ ["apple", "pear", "banana"] == true
        "orange" ∈ ["apple", "pear", "banana"] == true
     ]
-  ) ⇒ y {
+  ) ⇒ y.if {
     empty = false
-    nonempty(elt, tail) = (x == elt) || (x ∈ tail)
+    node(elt, tail) = (x == elt) || (x ∈ tail)
   }
 
 
@@ -313,15 +376,15 @@ list(variant) ↦ (
 
       If the suffix is an infinite list, the result will also be an infinite list.
     "
-  ) ⇒ x {
+  ) ⇒ x.if {
     empty = y
-    nonempty(elt, tail) = [elt] + (tail + y)
+    node(elt, tail) = [elt] + (tail + y)
   }
 
 
   list.repeating = (
     "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
-  ) ⇒ list { empty = list, nonempty(elt, etc) = list(.nonempty(elt, etc.repeating)) }
+  ) ⇒ list { empty = list, node(elt, etc) = list.node(elt, etc.repeating) }
 
   (x == y) = (
     "
@@ -334,26 +397,40 @@ list(variant) ↦ (
       [1, 2] == [1, 2]
       ([1,2,3] == []) == false
     ]
-  ) ⇒ x {
+  ) ⇒ x.if {
     empty = y.is empty
-    nonempty(x head, x tail) = y {
+    node(x head, x tail) = y.if {
       empty = false
-      nonempty(y head, y tail) =
+      node(y head, y tail) =
         (x head == y head) &&
         (x tail == y tail)
     }
   }
 
+  (x != y) = (
+    "True if the lists are not equal# either they have a different number
+     of elements or there are pairs of elements at the same position which
+     return true for `a != b`"
+  ) ⇒ x.if {
+    empty = ! y.is empty
+    node(x head, x tail) = y.if {
+      empty = true
+      node(y head, y tail) =
+        (x head != y head) ||
+        (x tail != y tail)
+    }
+  }
+
   x.strip common prefix(y) =  (
     "
-      Identify and a remove a common prefix from the two lists; the result is
+      Identify and a remove a common prefix from the two lists# the result is
       returned as a two-tuple.
     "
-  ) ⇒ x {
+  ) ⇒ x.if {
     empty = .(x, y)
-    nonempty(x head, x tail) = y {
+    node(x head, x tail) = y.if {
       empty = .(x, y)
-      nonempty(y head, y tail) = (x head == y head) {
+      node(y head, y tail) = (x head == y head) {
         true = x tail.strip common prefix(y tail)
         false = .(x, y)
       }
@@ -368,11 +445,11 @@ list(variant) ↦ (
       2. If the second list is prefix of the first, or the lists are equal, return false
       3. The element after any common prefix is compared using `<`, and the result is returned.
     "
-  ) ⇒ x.strip common prefix(y) ((xx, yy) -> xx {
-      empty = ! yy.is empty ; Empty list is less than any list but the empty list
-      nonempty(x elt) = yy {
-        empty = false ; We cannot be less than the empty list
-        nonempty(y elt) = x elt < y elt
+  ) ⇒ x.strip common prefix(y) ((xx, yy) -> xx.if {
+      empty = ! yy.is empty # Empty list is less than any list but the empty list
+      node(x elt) = yy.if {
+        empty = false # We cannot be less than the empty list
+        node(y elt) = x elt < y elt
       }
   })
 
@@ -384,43 +461,49 @@ list(variant) ↦ (
       2. If the second list is prefix of the first, return true
       3. The element after any common prefix is compared using `>`, and the result is returned
     "
-  ) => x.strip common prefix(y) ((xx, yy) -> xx {
-      empty = false ; Empty list is not greater than any other list
-      nonempty(x elt) = yy {
-        empty = true ; Nonempty list is always greater than an empty list
-        nonempty(y elt) = x elt > y elt
+  ) => x.strip common prefix(y) ((xx, yy) -> xx.if {
+      empty = false # Empty list is not greater than any other list
+      node(x elt) = yy.if {
+        empty = true # Nonempty list is always greater than an empty list
+        node(y elt) = x elt > y elt
       }
   })
 
   (x ≤ y) = (
     "
-      True if the first list is less than or equal the second.
+      True if the first list is less than or equal to the second.
 
       1. If the first list is a prefix of the second, or the lists are equal, return true.  Uses `==` to compare.
       2. If the second list is prefix of the first, return false
       3. The element after any common prefix is compared using `<`, and the result is returned.
     "
-  ) ⇒ x.strip common prefix(y) ((xx, yy) ↦ xx {
-      empty = true ; Empty list is less than or equal to all lists
-      nonempty(x elt) = yy {
-        empty = false ; We cannot be less than the empty list if we are not empty
-        nonempty(y elt) = x elt < y elt ; Only have to check <, we already checked ==
+  ) ⇒ x.strip common prefix(y) ((xx, yy) ↦ xx.if {
+      empty = true # Empty list is less than or equal to all lists
+      node(x elt) = yy.if {
+        empty = false # We cannot be less than the empty list if we are not empty
+        node(y elt) = x elt < y elt # Only have to check <, we already checked ==
       }
   })
 
   (x ≥ y) = (
     "
-      True if the first list is less than or equal the second.
+      True if the first list is less than or equal to the second.
 
       1. If the first list is a prefix of the second, false.
       2. If the second list is prefix of the first, or the lists are equal, true
       3. The element after any common prefix is compared using `>`, and the result is returned.
     "
-  ) ⇒ x.strip common prefix(y) ((xx, yy) ↦ xx {
-      empty = yy.is empty ; [] is only ≥ []
-      nonempty(x elt) = yy {
-        empty = true ; All lists are ≥ []
-        nonempty(y elt) = x elt > y elt ; Only have to check >, we already checked ==
+  ) ⇒ x.strip common prefix(y) ((xx, yy) ↦ xx.if {
+      empty = yy.is empty # [] is only ≥ []
+      node(x elt) = yy.if {
+        empty = true # All non empty lists are ≥ []
+        node(y elt) = x elt > y elt # Only have to check >, we already checked ==
       }
   })
+
+  x.label =
+    "[" + x.mapped(.label).right folded(
+      {left, right} ↦ left + "," + right
+      ""
+    ) + "]"
 }

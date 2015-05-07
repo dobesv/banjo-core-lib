@@ -1,3 +1,4 @@
+{label = "data.number"} @
 number(n bits, d bits, negative) ↦ (
   "
     Implementation of core numbers.
@@ -38,7 +39,7 @@ number(n bits, d bits, negative) ↦ (
   ) ⇒ (
     if (x.d == y.d) then (.(x.n, y.n, x.d)) else
     if (x.not a number || y.not a number) then (.([], [], [])) else
-    .(x.n * y.d, y.n * x.d, x.d * y.d) ; 2/3 + 3/4 = 8/12 + 9/12
+    .(x.n * y.d, y.n * x.d, x.d * y.d) # 2/3 + 3/4 = 8/12 + 9/12
   )
 
   bits = data.bits
@@ -74,12 +75,7 @@ number(n bits, d bits, negative) ↦ (
       Return `.positive`, `.negative`, `.zero`, or `.not a number`
       depending on the sign / status of this number.
     "
-  ) ⇒ (
-    if (x.is positive) then (.positive) else
-    if (x.is negative) then (.negative) else
-    if (x == 0)        then (.zero)     else
-    .not a number
-  )
+  ) ⇒ data.sign.of number(x)
 
   x.is positive = (
     "
@@ -165,7 +161,7 @@ number(n bits, d bits, negative) ↦ (
   ) ⇒ number(
     x.n * y.n
     x.d * y.d
-    x.negative ≠ y.negative ; both negative or both positive means a positive product
+    x.negative ≠ y.negative # both negative or both positive means a positive product
   )
 
 

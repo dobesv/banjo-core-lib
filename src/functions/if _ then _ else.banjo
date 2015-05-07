@@ -1,4 +1,2 @@
-(cond) ↦ (then) ↦ (else) ↦ cond {
-    true = then
-    false = else 
-}
+"If the condition is `true` return `then`, otherwise return `else`." ⇒
+(cond) ↦ (then) ↦ (else) ↦ cond.if { true = then, false = else }
