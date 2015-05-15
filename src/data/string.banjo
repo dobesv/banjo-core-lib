@@ -1,3 +1,4 @@
+{ label = "data.string" } @
 string(code points) ↦ (
   "Basic core unicode string, made from a list of unicode code points"
 ) => {code points} @ traits.total order @ {

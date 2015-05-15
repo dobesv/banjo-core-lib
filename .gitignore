@@ -60,3 +60,4 @@ $RECYCLE.BIN/
 .project
 .settings/org.eclipse.core.resources.prefs
 temp.banjo
+/.settings/

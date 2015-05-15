@@ -7,10 +7,10 @@
     "Create a list by prepending a single element to another list"
   ) ⇒ list(.node(first, tail))
 
-  list.unfold(first, f) = (
+  list.generator(first, f) = (
     "Create a list using an initial element and a function that takes an element and returns the next one"
-  ) ⇒ list.node(first, list.unfold(f(first), f)) @ {
-    label = "list.unfold(" + first + ", " + f + ")"
+  ) ⇒ list.node(first, list.generator(f(first), f)) @ {
+    label = "list.generator(" + first + ", " + f + ")"
   }
 
   label = "data.list"
@@ -24,11 +24,39 @@
     of the list must also implement the same comparisons.
   "
 ) ⇒ {
-  if = variant
+  if = (
+    "
+    Examination: `.node(first, tail)` for a non-empty list, `.empty` otherwise.
+    "
+  ) ⇒ variant
 
+  into(algebra) = (
+    "
+    Process/transform the list.
+    
+    Equals `algebra.node(algebra.element(first), algebra.tail(tail))` for a non-empty 
+    list, `algebra.empty` otherwise.
+    
+    Default implementations are provided to the algebra that if left unchanged simply result in a list again: 
+    `{ node = data.list.node, element = identity function, tail = .into(algebra), empty = data.list.empty }`
+    
+    This can be passed a \"fold\" or \"catamorphism\" to process the list and return an aggregate
+    or another data structure altogether.
+    
+    From another perspective, this treats the list as a suspension of its constructors and essentially redirects 
+    the constructors `list.{node,empty}` to use the given algebra for re-construction instead.  
+    "
+    
+    default algebra = list.{node,empty} @ { element = identity function, algebra.tail = .into(algebra) }
+    a = default algebra @ algebra
+  ) ⇒ variant {
+    empty = a.empty
+    node(first, tail) = a.node(a.element(first), a.tail(tail).into(a))
+  }
+  
   x.slice(start, end) = (
     "
-      Return elements from start (inclusive) to end (exclusive).
+      A 'slice' of the list elements from start (inclusive) to end (exclusive).
 
       Negative offsets will count from the end of the list.
     "
@@ -112,37 +140,34 @@
     ]
   ) ⇒ list.range(n, 1)
 
-  x.mapped(mapping function) = (
-    "
-      Create a view of the list where each elements are replaced with their corresponding
-      value in the given mapping function.
-    "
-    usage examples = [
-      [1,2,3,4,5].mapped(x -> x*x) == [1, 2*2, 3*3, 4*4, 5*5]
-    ]
-  ) ⇒ x.if {
-    empty = x
-    node(head, tail) = list.node(mapping function(head), tail.mapped(mapping function))
-  }
+  list.first = (
+    "A list containing only the first element of `list`, or an empty list if `list` is empty."
+  ) ⇒ list.at(0)
+  
+  list.last = (
+    "A list containing only the last element of `list`, or an empty list if `list` is empty."
+  ) ⇒ list.at(-1)
 
-  x.filtered(predicate) = (
-    "
-      Create a view of the list containing only elements that \"pass\" the filter.  That is,
-      for any element `e`, `predicate(e) == true`.
-    "
-    usage examples = [[1,2,3,4].filtered(.is odd) == [1,3]]
-  ) ⇒ x.if {
-    empty = x
-    node(head, tail) = predicate(head).if {
-      z.false = tail.filtered(predicate)
-      z.true = list.node(head, z.false)
+  x.where(predicate) = (
+    "Create a view of the list containing only elements that \"pass\" the filter.  That is,
+     for any element `e`, `predicate(e) == true`."
+    usage examples = [[1,2,3,4].where(.is odd) == [1,3]]
+  ) ⇒ x.into {
+    empty = list.empty
+    node(first, tail) = predicate(first).if {
+      false = tail
+      true = list.node(first, tail)
     }
   }
-
+  
+  x.unless(predicate) = (
+    "Equals a view of the list containing only elements that \"fail\" the filter.  That is,
+     for any element `e`, `predicate(e) == false`."
+  ) ⇒ x.where(not ∘ predicate)
 
   x.zipped with(y) = (
     "Create a list of matching pairs, one from each list.  The list will contain as many
-     element as the shorter of the two lists."
+     elements as the shorter of the two lists."
   ) ⇒ x.if {
     empty = x
     node(x head, x tail) = y.if {
@@ -161,8 +186,13 @@
       [1,-2,3,-4].none(.is positive) == false
       [1,-2,3,-4].none(.is not a number) == true
     ]
-  ) ⇒ x.filtered(predicate).is empty
+  ) ⇒ x.where(predicate).is empty
 
+  x.any(predicate) = (
+    "Return true if there is at least one element in the list for which `predicate(element) == true`"
+    
+  ) ⇒ ! x.none(predicate)
+  
   x.all(predicate) = (
     "Return true if there are no elements in the list for which `predicate(element) == false`"
 
@@ -173,32 +203,8 @@
     ]
   ) ⇒ x.none(elt -> ! predicate(elt))
 
-  x.right folded(function, initial state) = (
-    "
-      Apply the given function to each element while threading a state through
-      each call.  The function accepts an object with left and right values and
-      returns a new value that may either be used as a left or right value for
-      the next call or returned.
-
-      The `initial value` is used to ensure there is always a value to return
-      from the fold and is effectively pre-pended to the list as part of the fold.
-
-      This fold is right-associative and lazy, which means that only as much of the list
-      that is actually used by the provided function will be walked by the algorithm.
-
-      The final function return value is returned.  For an empty list, the `initial state` is
-      returned.
-    "
-    usage examples = (f({left,right}) = (left + right)) ⇒ [
-      [1,2,3,4,5].reverse folded(f,0) == f({left=0,right=f({left=1,right=f({left=2,right=f({left=3,right=f({left=4,right=5})})})})}) == (0+(1+(2+(3+(4+5))))) == 15
-    ]
-  ) ⇒ x.if {
-    node(head, tail) = function({left = initial state, right = tail.right folded(function, head)})
-    empty = initial state
-  }
-
   x.is empty = (
-    "Return true if this list is empty (has no elements), otherwise return false."
+    "true iff this list is empty (has no elements), otherwise false"
     usage examples = [
       [].is empty == true
       [1].is empty == false
@@ -207,7 +213,7 @@
   ) ⇒ x.if { empty = true, node() = false }
 
   x.is nonempty = (
-    "Return true if the list has at least one element, otherwise return false."
+    "true iff the list has at least one element, otherwise false"
     usage examples = [
       [1].nonempty == true
       [].nonempty == false
@@ -251,97 +257,65 @@
   }
 
   (x && result) = (
-    "Return `result` if the `list` is nonempty, otherwise return `list` (which is the empty list)"
+    "Return `result` if the `x.is nonempty`, otherwise return `x` (which is the empty list)"
   ) ⇒ x.if {
     node() = result
     empty = x
   }
 
   (x || substitute) = (
-    "Return `substitute` if the `list` is empty.  Otherwise return the list itself."
+    "Return `substitute` if `x.is empty`.  Otherwise return `x`."
   ) ⇒ x.if {
     node() = x
     empty = substitute
   }
 
   (x ?: substitute) = (
-    "Return `substitute` if the `list` is empty.  Otherwise return the first element."
+    "Return `substitute` if `x` is empty.  Otherwise return the first element in `x`."
   ) ⇒ x.if {
     node(first) = first
     empty = substitute
   }
 
-  x.flattened = (
-    "
-      Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists.
-
-      Note that this is roughly equivalent to `list.sum([])`.
-    "
-    usage examples = [
-      [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
-    ]
-  ) ⇒ x.if {
-    empty = x
-    node(elt, etc) = elt + etc.flattened
-  }
-
   list.sum(start) = (
     "
       Return the result of a `+` operation on all elements of the list and the `start` parameter (typically
-      `0` or `[]` is used as the `start` value)
+      `0`, `[]`, or another appropriate identity for `+` is used as the `start` value)
+      
+      The list must be a finite list.
     "
     usage examples = [
       [1,2,3].sum(0) == 0 + 1 + 2 + 3 == 6
       [[1,2],[3,4],[5,6]].sum([]) == [] + [1,2] + [3,4] + [5,6] == [1,2,3,4,5,6]
     ]
-  ) ⇒ list.left folded(
-    {left, right} -> left + right
-    start
-  )
+  ) ⇒ list.into {
+    empty = start
+    node(elt, sum) = elt + sum
+  }
 
+  x.flattened = (
+    "Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists."
+    usage examples = [
+      [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
+    ]
+  ) ⇒ list.sum(list.empty)
 
+  list.with offsets from(offset) = (
+    "
+    A list of each `element` from `list` wrapped in an object `{ element, offset }` where the offset is 
+    the number of previous elements in the list, plus the offset given.
+    "     
+  ) ⇒ list.if {
+    empty = list.empty
+    node(element, tail) = list.node({element, offset}, tail.with offsets from(offset+1))
+  }
+  
   list.with offsets = (
     "
-      Return a view of the list where the list and its tails have an extra method `offset` returning the number of
-      elements passed to reach that tail.
+    A list of each `element` in `list` with an object `{ element, offset }`, where `offset` is the 
+    number of previous elements in the list
     "
-
-    list with offsets(offset list, start offset) = list.class.mixin @ (
-        (visitor) -> offset list .if {
-          empty = offset list
-          node(element, etc) = list.node(element, list with offsets(etc, start offset+1))
-        }
-      ) @ {
-      offset = start offset
-      x.to(n) = list with offsets(x:to(n), start offset)
-      x.mapped(mapping) = list with offsets(x:map(mapping), start offset)
-    }
-  ) ⇒ list with offsets(list, 0)
-
-  list.left folded(function, initial state) = (
-    "
-      Apply the given `function` to each element while threading a state through
-      each call.  The `function` accepts an element and a state and returns a new
-      state.
-
-      The `initial value` is used to ensure there is always a value to return
-      from the fold and is effectively pre-pended to the list as part of the fold.
-
-      This fold is left-associative.
-
-      The final function result is returned.  For an empty list, the `initial state` is
-      returned.
-    "
-    usage examples = (f({left,right}) = (left + right)) ⇒ [
-      [1,2,3,4,5].folded(f,0) == 15
-      [1,2,3,4,5].folded(f,0) == f({left=f({left=f({left=f({left=f({left=0,right=1}),right=2}),right=3}),right=4}),right=5})
-    ]
-
-    helper(tail, p) = tail.if {
-      node(element, tail tail) = helper(tail tail, {left = function(p @ {right=element})})
-      empty = p.left
-    }
-  ) ⇒ helper(list, {left = initial state})
+  ) ⇒ list.with offsets from(list, 0)
 
   list.length = (
     "
@@ -353,7 +327,7 @@
       [1,2,3].length == 4
       [].length == 0
     ]
-  ) ⇒ list.left folded({right} -> 1 + right, 0)
+  ) ⇒ list.projection(_ ↦ 1).sum(0)
 
   (x ∈ y) = (
     "Return true if `x == element` for any `element` in `list`."
@@ -375,7 +349,7 @@
     "
   ) ⇒ x.if {
     empty = y
-    node(elt, tail) = [elt] + (tail + y)
+    node(elt, tail) = list.node(elt, tail + y)
   }
 
 
@@ -498,9 +472,24 @@
       }
   })
 
-  x.label =
-    "[" + x.mapped(.label).right folded(
-      {left, right} ↦ left + "," + right
-      ""
-    ) + "]"
+  x.group by(_ eq) = (
+    "Equals a list of lists where all elements of each list have `(eltM) eq (eltN)`.  `_ eq` must be associative and commutative." 
+    
+    examples = [
+      [1,2,3,4,5].group by(x ↦ y ↦ x.is even == y.is even) == [[1,3,5],[2,4]]
+    ]
+    
+  ) ⇒ x.if {
+    node(elt, tail) = list.node(
+      list.node(elt, tail.where((x) eq)) # Build grouped list
+      tail.unless((x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
+    )
+    empty = list.empty
+  } 
+  x.label = "[" + x.into {
+    node(element, tail) = element.label + ", " + tail
+    empty = "]"
+  }
+  
+  
 }

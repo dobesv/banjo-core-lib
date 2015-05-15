@@ -1,0 +1,2 @@
+"Projection of a collection; `(projection) from (collection)` equals `projection(element)` for each `element ∈ collection`" ⇒
+(projection) ↦ .into({ element = projection })

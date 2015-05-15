@@ -4,4 +4,4 @@
  The result of second is the result of the function.
 " ⇒
 # TODO Need a way to handle this kind of variadic delegation for any number of arguments
-(first, second) ↦ (a,b,c,d,e) ↦ second(first(a,b,c,d,e))
+(second) ↦ (first) -> (a,b,c,d,e) ↦ second(first(a,b,c,d,e))
