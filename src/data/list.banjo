@@ -51,20 +51,28 @@
     a = default algebra @ algebra
   ) ⇒ variant {
     empty = a.empty
-    node(first, tail) = a.node(a.element(first), a.tail(tail).into(a))
+    node(first, tail) = a.node(a.element(first), a.tail(tail))
   }
   
-  x.slice(start, end) = (
+  (a *> f) = (
+    "A list mapped by the function `f`.  That is, a list of `f(element)` for each `element ∈ a`." 
+  ) ⇒ a.into { element = f }
+  
+  a.slice(start, end) = (
     "
       A 'slice' of the list elements from start (inclusive) to end (exclusive).
 
       Negative offsets will count from the end of the list.
     "
-    usage examples = [[1,2,3,4,5].slice(2,2) == [3,4]]
+    usage examples = [
+      [1,2,3,4,5].slice(2,4) == [3,4]
+      [1,2,3,4,5].slice(2,2) == []
+      [1,2,3,4,5].slice(2,-1) == [3, 4]
+    ]
   ) ⇒ (
-    if(start.is negative) then(x.slice(max(0, start + x.length), end)) else
-    if(end.is negative) then(x.slice(start, max(0, end + x.length))) else
-    x.from(start).to(end-start)
+    if(start.is negative) then(a.slice(max(0, start + a.length), end)) else
+    if(end.is negative) then(a.slice(start, max(0, end + a.length))) else
+    a.from(start).to(end-start)
   )
 
   x.from(start) = (
@@ -97,7 +105,7 @@
 
   )
 
-  x.to(limit) = (
+  a.to(limit) = (
     "
       Return a list containing elements at the start of this list up to `limit`
       elements.
@@ -110,12 +118,12 @@
     "
     usage examples = [[1,2,3,4,5].to(3) == [1,2,3]]
   ) ⇒ limit.sign.if {
-    positive = x.if {
+    positive = a.if {
       node(element, etc) = list.node(element, etc.to(limit - 1))
-      empty = x
+      empty = a
     }
-    zero = x
-    negative = x.to(max(0, x.length + limit))
+    zero = []
+    negative = a.to(max(0, a.length + limit))
     undefined = []
   }
 
@@ -324,10 +332,14 @@
       For example: `[1,2,3].length == 3`
     "
     usage examples = [
-      [1,2,3].length == 4
+      [1,2,3].length == 3
       [].length == 0
     ]
-  ) ⇒ list.projection(_ ↦ 1).sum(0)
+  ) ⇒ list.into {
+    node(elt, tail) = 1 + tail
+    empty = 0
+  }
+    
 
   (x ∈ y) = (
     "Return true if `x == element` for any `element` in `list`."
@@ -485,11 +497,12 @@
       tail.unless((x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
     )
     empty = list.empty
-  } 
-  x.label = "[" + x.into {
-    node(element, tail) = element.label + ", " + tail
-    empty = "]"
   }
+  
+  x.label = x*.label.if { 
+    empty = "[]"
+    node(first, rest) = "[" + first + (rest *> ", ".+).sum("]")
+  } 
   
   
 }
