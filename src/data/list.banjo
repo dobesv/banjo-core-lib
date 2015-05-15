@@ -146,15 +146,24 @@
       [].at(-1) == []
       [1,2,3].at(-4) == []
     ]
-  ) ⇒ list.range(n, 1)
+  ) ⇒ list.from(n).to(1)
 
   list.first = (
     "A list containing only the first element of `list`, or an empty list if `list` is empty."
-  ) ⇒ list.at(0)
+  ) ⇒ variant {
+    node(n, tail) = [n]
+    empty = []
+  }
   
   list.last = (
     "A list containing only the last element of `list`, or an empty list if `list` is empty."
-  ) ⇒ list.at(-1)
+  ) ⇒ variant {
+    node(element, tail) = tail.if { 
+      empty = [element]
+      node(_, _) = tail.last
+    }
+    empty = []
+  }
 
   x.where(predicate) = (
     "Create a view of the list containing only elements that \"pass\" the filter.  That is,
