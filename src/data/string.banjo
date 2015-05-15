@@ -8,5 +8,5 @@ string(code points) ↦ (
 
   s.with code points(new code points) = string(new code points)
 
-  s.label = s
+  s.label = "\"" + s + "\"" # TODO Escaping ... 
 }
