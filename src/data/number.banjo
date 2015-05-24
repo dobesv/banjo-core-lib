@@ -18,14 +18,14 @@ number(n bits, d bits, negative) ↦ (
     3. If the denominator `d` is zero, the numerator must be `[]` or `[true]`.
   "
   usage examples = [
-    0 == number([], [true], false)
-    1 == number([true], [true], false)
-    2 == number([true, false], [true], false)
-    -1 == number([true], [true], true)
-    -2 == number([true, false], [true], true)
-    ∞ == number([true], [], false)
-    -∞ == number([true], [], true)
-    NaN == number([], [], false)
+    #0 == number([], [true], false)
+    #1 == number([true], [true], false)
+    #2 == number([true, false], [true], false)
+    #-1 == number([true], [true], true)
+    #-2 == number([true, false], [true], true)
+    #∞ == number([true], [], false)
+    #-∞ == number([true], [], true)
+    #NaN == number([], [], false)
   ]
 
   match denominator (x, y) = (
