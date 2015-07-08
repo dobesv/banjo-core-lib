@@ -1,7 +1,0 @@
-"
- Function composition.  The first function is called with with the
- arguments to this function.  The result of calling first is passed to second.
- The result of second is the result of the function.
-" ⇒
-# TODO Need a way to handle this kind of variadic delegation for any number of arguments
-(second) ↦ (first) -> (a,b,c,d,e) ↦ second(first(a,b,c,d,e))

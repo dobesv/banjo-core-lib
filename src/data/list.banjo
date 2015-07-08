@@ -17,13 +17,13 @@
 
 } @ list(variant) ↦ (
   "
-    The parameter should be `.node(head, tail)` for all lists except the empty list, which
-    uses `.empty`.
+  The parameter should be `.node(head, tail)` for all lists except the empty list, which
+  uses `.empty`.
 
-    Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
-    of the list must also implement the same comparisons.
+  Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
+  of the list must also implement the same comparisons.
   "
-) ⇒ {
+) ⇒ (a(locs) ↦ locs *> a.at) @ {
   if = (
     "
     Examination: `.node(first, tail)` for a non-empty list, `.empty` otherwise.
@@ -129,12 +129,12 @@
 
   list.at(n) = (
     "
-      Return a view of the list including only a single element after skipping `n` elements.
+    Return a view of the list including only a single element after skipping `n` elements.
 
-      If `n` is negative, the effective offset is the length of the list plus `n` - allowing a negative
-      offset to work back from the end of the list.
+    If `n` is negative, the effective offset is the length of the list plus `n` - allowing a negative
+    offset to work back from the end of the list.
 
-      If `n >= list.length || -n > list.length`, an empty list is returned.
+    If `n >= list.length || -n > list.length`, an empty list is returned.
     "
     usage examples = [
       [1,2,3,4,5].at(0) == [1]

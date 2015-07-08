@@ -1,4 +1,4 @@
-traits.total order @ {
+traits.total order @ traits.atom @ {
   if = .false
   (! false) = (
     usage examples = [

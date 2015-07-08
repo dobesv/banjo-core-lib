@@ -1,4 +1,4 @@
-({true, false} = data) ⇒ traits.total order @ {
+traits.total order @ traits.atom @ {
   if = .true
   (! true) = false
   (true && x) = x

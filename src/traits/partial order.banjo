@@ -1,0 +1,15 @@
+"Trait for partially ordered objects; the object need only implement `≤` and this provides `≥`, `>`, `<`, `==`, `≠`, and `<=>`." ⇒ @ {
+  # (x ≤ y) = (x < y || x == y)
+  (x > y) = !(x ≤ y)
+  (x < y) = !(y ≤ x) 
+  (x ≥ y) = (x == y) || (x > y)
+  (x ≠ y) = !(x == y)
+  (x == y) = x ≤ y && y ≤ x
+  
+  (x <=> y) = ( 
+    if(x < y) then (data.order.ascending) else
+    if(x > y) then (data.order.descending) else
+    if(x == y) then (data.order.equal) else
+    data.order.undefined
+  )
+} 

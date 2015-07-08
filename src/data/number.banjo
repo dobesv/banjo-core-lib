@@ -38,13 +38,13 @@ number(n bits, d bits, negative) ↦ (
     "
   ) ⇒ (
     if (x.d == y.d) then (.(x.n, y.n, x.d)) else
-    if (x.not a number || y.not a number) then (.([], [], [])) else
+    if (x.is not a number || y.is not a number) then (.([], [], [])) else
     .(x.n * y.d, y.n * x.d, x.d * y.d) # 2/3 + 3/4 = 8/12 + 9/12
   )
 
   bits = data.bits
 
-) ⇒ traits.total order @ {
+) ⇒ traits.total order @ traits.atom @ {
   n = bits(n bits)
   d = bits(d bits)
 
@@ -59,7 +59,7 @@ number(n bits, d bits, negative) ↦ (
       Zero is represented by an empty numerator, and
       any non-empty denominator.
     "
-  ) ⇒ x.n.is zero && !x.not a number
+  ) ⇒ x.n.is zero && !x.is not a number
 
   x.is not a number = (
     "
@@ -163,6 +163,5 @@ number(n bits, d bits, negative) ↦ (
     x.d * y.d
     x.negative ≠ y.negative # both negative or both positive means a positive product
   )
-
 
 }

@@ -1,11 +1,14 @@
-(
-  "
-    Trait for totally ordered types of objects.  The object need only implement `==` and `<` and
-    this trait provides `≤`, `>`, `≥`, and `≠`.
-  "
-) ⇒ {
+#!banjo
+"Trait for totally ordered types of objects.  The object need only implement `==` and `<` and this trait provides `≤`, `>`, `≥`, `≠`, and `<=>`." ⇒ {
   (x ≤ y) = (x < y || x == y)
   (x > y) = !(x < y || x == y)
   (x ≥ y) = !(x < y)
   (x ≠ y) = !(x == y)
+  (x <=> y) = ( 
+    if(x < y) then (data.order.ascending) else
+    if(x > y) then (data.order.descending) else
+    if(x == y) then (data.order.equal) else
+    data.order.undefined
+  )
+    
 }
