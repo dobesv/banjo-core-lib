@@ -1,13 +1,13 @@
 {label = "data.number"} @
-number(n bits, d bits, negative) ↦ (
+number(n bits, d bits, is negative) ↦ (
   "
     Implementation of core numbers.
 
     A number can be represented with:
 
-    * negative: a flag indicating sign (positive or negative)
-    * n: a list of bits (booleans) for the base number / numerator
-    * d: a list of bits (booleans) for the denominator
+    * is negative: a flag indicating sign (positive or negative)
+    * n bits: a list of bits (booleans) for the base number / numerator
+    * d bits: a list of bits (booleans) for the denominator
 
     Note that this number system cannot represent irrational or complex numbers.
 
@@ -48,7 +48,7 @@ number(n bits, d bits, negative) ↦ (
   n = bits(n bits)
   d = bits(d bits)
 
-  (-x) = number(x.n, x.d, ! x.negative)
+  (-x) = number(x.n, x.d, ! x.is negative)
 
   (|x|) = number(x.n, x.d, false)
 
@@ -77,12 +77,10 @@ number(n bits, d bits, negative) ↦ (
     "
   ) ⇒ data.sign.of number(x)
 
-  x.is positive = (
-    "
-      Return `true` if this number is positive.
-    "
-  ) ⇒ !x.negative
+  x.is positive = "`true` if this number is greater than or equal to zero" ⇒ ¬ is negative
 
+  x.is negative = "`true` if this number is less than zero." ⇒ ¬ is negative
+  
   x.is even = (
     "
       Return `true` if this number is even.
@@ -108,12 +106,12 @@ number(n bits, d bits, negative) ↦ (
   (x < y) = (
     "Return `true` if this number is less than the other."
     usage examples = [
-      1 <  3 == true
-      3 <  1 == false
-      1 <  1 == false
-      1 <  0 == false
-     -1 <  0 == true
-      0 < -1 == false
+      1  <  3 == true
+      3  <  1 == false
+      1  <  1 == false
+      1  <  0 == false
+      -1 <  0 == true
+      0  < -1 == false
     ]
   ) ⇒ if (x.is negative == y.is negative) then ((x - y).is negative) else (x.is negative)
 
@@ -136,8 +134,8 @@ number(n bits, d bits, negative) ↦ (
       If either number is `NaN`, or both numbers are ∞ or -∞ returns `NaN`.
     "
   ) ⇒ (
-    if (x.negative) then (-(-x + y)) else
-    if (y.negative) then (x + (-y)) else
+    if (x.is negative) then (-(-x + y)) else
+    if (y.is negative) then (x + (-y)) else
     match denominator (x, y,
       (x bits, y bits, d) -> (x bits - y bits) ((n, negative) ->
         number(n, d, negative)
@@ -161,7 +159,7 @@ number(n bits, d bits, negative) ↦ (
   ) ⇒ number(
     x.n * y.n
     x.d * y.d
-    x.negative ≠ y.negative # both negative or both positive means a positive product
+    x.is negative ≠ y.is negative # both negative or both positive means a positive product
   )
 
 }

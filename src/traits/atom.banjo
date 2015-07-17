@@ -1,5 +1,5 @@
 {
   a.into(algebra) = (
-    "Act like a singleton list for the some purposes."
-  ) ⇒ algebra.node(a, algebra.empty)
+    "Act like a singleton collection."
+  ) ⇒ algebra.element(a)
 }
