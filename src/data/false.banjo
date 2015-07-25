@@ -18,7 +18,9 @@ traits.total order @ traits.atom @ {
    ]
   ) ⇒ x
   (false & x) = false
+  (false * x) = false
   (false | x) = x
+  (false + x) = x
   (false ?: x) = x
   false.map(f) = []
   false.ordinal = 0

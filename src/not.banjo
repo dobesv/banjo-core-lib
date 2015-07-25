@@ -1,2 +1,2 @@
-"Function wrapper for the ! operator"
+"Function wrapper for the ! operator" ⇒
 x ↦ !x

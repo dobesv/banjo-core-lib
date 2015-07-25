@@ -25,7 +25,7 @@
   Lists do implement comparisons like `==`, `<`, `≤`, `>`, `≥` and `≠`, but in order for them to work all the elements
   of the list must also implement the same comparisons.
   "
-) ⇒ (a(locs) ↦ locs ; a.at) @ {
+) ⇒ (a(locs) ↦ locs ; a.at) @ traits.collection(list.{empty, element}) @ {
   if = "
     Examination: `.node(first, tail)` for a non-empty list, `.empty` otherwise.
   " ⇒ variant
@@ -46,13 +46,6 @@
     node(first, tail) = algebra.element(first) + tail.into(algebra)
   }
 
-  (f ∘ a) = "
-    Element-wise application of the function `f`.  That is, a list of `f(element)` for each `element` in `a`.
-  " ⇒ a.into {
-    element = f ∘ list.element
-    empty = list.empty
-  }
-    
   
   a.slice(start, end) = "
       A 'slice' of the list elements from start (inclusive) to end (exclusive).
@@ -149,7 +142,7 @@
       [1,2,3].at(-4) == []
     ]
   ) ⇒ (
-    if(n < 0) then (x.at(n + x.length)) else
+    if(n < 0) then (x.at(max(0, n + x.length))) else
     x.from(n).first
   )
 
@@ -170,20 +163,6 @@
     empty = []
   }
 
-  x.where(predicate) = (
-    "Create a view of the list containing only elements that \"pass\" the filter.  That is,
-     for any element `e`, `predicate(e) == true`."
-    usage examples = [[1,2,3,4].where(.is odd) == [1,3]]
-  ) ⇒ x.into {
-    element(elt) = if(predicate(elt)) then [elt] else []
-    empty = list.empty
-  }
-  
-  x.unless(predicate) = (
-    "Equals a view of the list containing only elements that \"fail\" the filter.  That is,
-     for any element `e`, `predicate(e) == false`."
-  ) ⇒ x.where(not ∘ predicate)
-
   x.zipped with(y) = (
     "Create a list of matching pairs, one from each list.  The list will contain as many
      elements as the shorter of the two lists."
@@ -197,47 +176,6 @@
       )
     }
   }
-
-  x.none(predicate) = (
-    "Return true if there are no elements in the list for which `predicate(element) == true`"
-
-    usage examples = [
-      [1,-2,3,-4].none(.is positive) == false
-      [1,-2,3,-4].none(.is not a number) == true
-    ]
-  ) ⇒ x.where(predicate).is empty
-
-  x.any(predicate) = (
-    "Return true if there is at least one element in the list for which `predicate(element) == true`"
-    
-  ) ⇒ ! x.none(predicate)
-  
-  x.all(predicate) = (
-    "Return true if there are no elements in the list for which `predicate(element) == false`"
-
-    usage examples = [
-        [1,2,3,4].all(.is positive) == true
-        [-1,-2,-3].all(.is negative) == true
-        [1, -2, 3].all(.is positive) == false
-    ]
-  ) ⇒ x.none(elt -> ! predicate(elt))
-
-  x.is empty = (
-    "true iff this list is empty (has no elements), otherwise false"
-    usage examples = [
-      [].is empty == true
-      [1].is empty == false
-      [1,2,3].is empty == false
-    ]
-  ) ⇒ x.if { empty = true, node() = false }
-
-  x.is nonempty = (
-    "true iff the list has at least one element, otherwise false"
-    usage examples = [
-      [1].is nonempty == true
-      [].is nonempty == false
-    ]
-  ) ⇒ x.if { empty = false, node() = true }
 
   x.without prefix(prefix) = (
     "If the list starts with the given prefix, return `.suffix(rest of list)`.  Otherwise returns `.not matched`."
@@ -268,7 +206,7 @@
 
     # Still at least one more element to check in the prefix
     node(prefix elt, prefix etc) = x.if {
-      node(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with prefix etc)
+      node(list elt, list etc) = (prefix elt == list elt) && (list etc.starts with(prefix etc))
 
       # No element in the list to look at, the list is too short
       empty = false
@@ -296,61 +234,24 @@
     empty = substitute
   }
 
-  list.sum(start) = (
-    "
-      Return the result of a `+` operation on all elements of the list and the `start` parameter (typically
-      `0`, `[]`, or another appropriate identity for `+` is used as the `start` value)
-      
-      The list must be a finite list.
-    "
-    usage examples = [
-      [1,2,3].sum(0) == 0 + 1 + 2 + 3 == 6
-      [[1,2],[3,4],[5,6]].sum([]) == [] + [1,2] + [3,4] + [5,6] == [1,2,3,4,5,6]
-    ]
-  ) ⇒ list.into {
-    empty = start
-    element(elt) = elt
-  }
-
-  x.flattened = (
-    "Assuming the list contains only lists, return a view that is the concatenation or chaining of all those lists."
-    usage examples = [
-      [[1,2],[3,4],[5,6]].flattened == [1,2,3,4,5,6]
-    ]
-  ) ⇒ list.sum(list.empty)
-
-  list.with offsets from(offset) = (
+  x.with offsets from(offset) = (
     "
     A list of each `element` from `list` wrapped in an object `{ element, offset }` where the offset is 
     the number of previous elements in the list, plus the offset given.
     "     
-  ) ⇒ list.if {
-    empty = list.empty
+  ) ⇒ x.if {
+    empty = x
     node(element, tail) = list.node({element, offset}, tail.with offsets from(offset+1))
   }
   
-  list.with offsets = (
+  x.with offsets = (
     "
     A list of each `element` in `list` with an object `{ element, offset }`, where `offset` is the 
     number of previous elements in the list
     "
-  ) ⇒ list.with offsets from(list, 0)
+  ) ⇒ x.with offsets from(x, 0)
 
-  list.length = (
-    "
-      Calculate the length of the list.
-
-      For example: `[1,2,3].length == 3`
-    "
-    usage examples = [
-      [1,2,3].length == 3
-      [].length == 0
-    ]
-  ) ⇒ list.into {
-    element(e) = 1
-    empty = 0
-  }
-    
+  x.length = x.size
 
   (x ∈ y) = (
     "Return true if `x == element` for any `element` in `list`."
@@ -363,7 +264,6 @@
     node(elt, tail) = (x == elt) || (x ∈ tail)
   }
 
-
   (x + y) = (
     "
       Return a list with all the elements of this list followed by all the elements of the other list.
@@ -374,7 +274,6 @@
     empty = y
     node(elt, tail) = list.node(elt, tail + y)
   }
-
 
   list.repeating = (
     "Return a cyclic view of this list.  The resulting list repeats the elements from this list endlessly."
@@ -504,16 +403,13 @@
     
   ) ⇒ x.if {
     node(elt, tail) = list.node(
-      list.node(elt, tail.where((x) eq)) # Build grouped list
-      tail.unless((x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
+      list.node(elt, tail.selection((x) eq)) # Build grouped list
+      tail.selection(not ∘ (x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
     )
     empty = list.empty
   }
   
-  x.label = x ; .label.if { 
-    empty = "[]"
-    node(first, rest) = "[" + first + (", ".+ ∘ rest).sum("]")
-  } 
+  x.label = (["["] + (x.at(0) ; .label) + (x.from(1) ; (s -> ", " + s.label)) + ["]"]).sum("")
   
   
 }
