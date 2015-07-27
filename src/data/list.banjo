@@ -142,8 +142,12 @@
       [1,2,3].at(-4) == []
     ]
   ) ⇒ (
-    if(n < 0) then (x.at(max(0, n + x.length))) else
-    x.from(n).first
+    if(n < 0) then (
+      (nn = n + x.length) ⇒
+      if(nn >= 0) then (x.at(max(0, n + x.length))) else []
+    ) else (
+      x.from(n).first
+    )
   )
 
   x.first = (
@@ -256,8 +260,8 @@
   (x ∈ y) = (
     "Return true if `x == element` for any `element` in `list`."
     usage examples = [
-       "apple" ∈ ["apple", "pear", "banana"] == true
-       "orange" ∈ ["apple", "pear", "banana"] == true
+       "apple" ∈ ["apple", "pear", "banana"]
+       ¬("orange" ∈ ["apple", "pear", "banana"])
     ]
   ) ⇒ y.if {
     empty = false
