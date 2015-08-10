@@ -407,8 +407,8 @@
     
   ) ⇒ x.if {
     node(elt, tail) = list.node(
-      list.node(elt, tail.selection((x) eq)) # Build grouped list
-      tail.selection(not ∘ (x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
+      list.node(elt, tail.filtered((x) eq)) # Build grouped list
+      tail.filtered(not ∘ (x) eq).group by(_ eq) # Eliminate already grouped values from the tail and group 
     )
     empty = list.empty
   }

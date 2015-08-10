@@ -5,10 +5,11 @@
     Element-wise application of the function `f`.  That is, a list of `f(element)` for each `element` in `a`.
   " ⇒ a.into { element = element ∘ f, empty }
 
-  x.selection(predicate) = (
+    
+  x.filtered(predicate) = (
     "Create a view of the list containing only elements that \"pass\" the filter.  That is,
      for any element `e`, `predicate(e) == true`."
-    usage examples = [[1,2,3,4].selection(.is odd) == [1,3]]
+    usage examples = [[1,2,3,4].filtered(.is odd) == [1,3]]
   ) ⇒ x.into {
     element(elt) = if(predicate(elt)) then (element(elt)) else (empty)
     empty = empty
