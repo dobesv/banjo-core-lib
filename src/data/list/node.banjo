@@ -1,0 +1,3 @@
+"Make a list by adding an element to the start of another list" ⇒
+  (first element, tail) ↦ 
+    data.list(.node(first element, tail))

@@ -1,0 +1,3 @@
+"The empty list" ⇒ 
+  data.list(.empty) @ 
+    { label = "[]" }

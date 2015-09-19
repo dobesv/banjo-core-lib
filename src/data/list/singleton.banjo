@@ -1,0 +1,3 @@
+"A list of a single element" ⇒ 
+  (elt) ↦ 
+    data.list.node(elt, data.list.empty)

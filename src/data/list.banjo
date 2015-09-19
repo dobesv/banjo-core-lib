@@ -1,23 +1,4 @@
-{
-  list.empty = (
-    "The empty list"
-  ) ⇒ list(.empty) @ { label = "[]" }
-
-  list.element(elt) = "A list of a single element" ⇒ list.node(elt, list.empty)
-  
-  list.node(first, tail) = (
-    "Create a list by prepending a single element to another list"
-  ) ⇒ list(.node(first, tail))
-
-  list.generator(first, f) = (
-    "Create a list using an initial element and a function that takes an element and returns the next one"
-  ) ⇒ list.node(first, list.generator(f(first), f)) @ {
-    label = "list.generator(" + first + ", " + f + ")"
-  }
-
-  label = "data.list"
-
-} @ list(variant) ↦ (
+list(variant) ↦ (
   "
   The parameter should be `.node(head, tail)` for all lists except the empty list, which
   uses `.empty`.
@@ -26,9 +7,8 @@
   of the list must also implement the same comparisons.
   "
 ) ⇒ (a(locs) ↦ locs ; a.at) @ traits.collection(list.{empty, element}) @ {
-  if = "
-    Examination: `.node(first, tail)` for a non-empty list, `.empty` otherwise.
-  " ⇒ variant
+  if = "`.node(first element, tail)` for a non-empty list, `.empty` otherwise." ⇒ 
+      variant
 
   a.into(algebra) = "
     Apply the given collection algebra to this list.  Each element of the list
