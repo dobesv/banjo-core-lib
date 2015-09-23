@@ -1,0 +1,12 @@
+"A list of events with time-dependent operations included" ⇒
+{
+  of(initial event, value of, next event of) = {
+    es.into(algebra) =
+      initial event ;
+      (x ↦ 
+        algebra.element(value of(x)) + 
+        data.event stream.of(
+          next event of(x), value of, next event of)
+      ) ?: algebra.empty
+  }
+}
