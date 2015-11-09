@@ -1,0 +1,21 @@
+"Base object for different kinds of lists" ⇒
+traits.collection(list) @ {
+
+  a.length = |a|
+  a.size = |a|
+  
+  (a + other list) =
+    if(other list.is empty) then (a) else (list.sum(a, other list))
+    
+  a.label = (
+  	labels = a ; .label
+  	with commas = labels.first + (labels.after first ; (label ↦ [", ", label])).sum([])
+  	with brackets = ["["] + with commas + ["]"]
+  ) ⇒ with brackets.sum("")
+  
+  a.first = a.to(1)
+  a.last = a.from(|a| - 1)
+  a.after first = a.from(min(|a|, 1))
+  a.before last = a.to(max(0, |a| - 1))
+  
+}

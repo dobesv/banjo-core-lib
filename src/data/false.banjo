@@ -25,6 +25,7 @@ traits.total order @ traits.atom @ {
   false.map(f) = []
   false.ordinal = 0
   (false == x) = x.if { false = true, true = false }
+  (false != x) = x.if { false = false, true = true }
   (false < x) = x # False is less than true
 
   label = "false"

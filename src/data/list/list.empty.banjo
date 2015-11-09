@@ -1,0 +1,26 @@
+"The empty list" ⇒ list.trait @ {
+  if(x) = x.empty
+  into(algebra) = algebra.empty
+  empty list.slice(start, end) = empty list
+  empty list.from(start) = empty list
+  empty list.to(limit) = empty list
+  empty list.at(n) = empty list
+  empty list.first = empty list
+  empty list.last = empty list
+  empty list.zipped with(_) = empty list
+  empty list.starts with(other list) = other list.is empty
+  (empty list && other) = empty list
+  (empty list || sub) = sub
+  (empty list ?: sub) = sub
+  (elt ∈ empty list) = false
+  empty list.is empty = true
+  (|empty list|) = 0
+  (empty list == other list) = other list.is empty
+  (empty list ≠ other list) = other list.is nonempty
+  (empty list < other list) = false
+  (empty list ≤ other list) = other list.is empty
+  a.after first = a
+  a.before last = a
+  label = "[]"
+  
+}
