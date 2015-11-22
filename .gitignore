@@ -64,5 +64,5 @@ temp.banjo
 /.settings/
 /build/
 /.gradle/
-META-INF/MANIFEST.MF
+/META-INF
 /bin/
