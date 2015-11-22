@@ -58,6 +58,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 .project
+.classpath
 .settings/org.eclipse.core.resources.prefs
 temp.banjo
 /.settings/
+/build/
+/.gradle/
+META-INF/MANIFEST.MF
+/bin/
