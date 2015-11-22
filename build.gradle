@@ -25,12 +25,15 @@ repositories {
 
 sourceSets {
 	main {
-		java {
-			srcDirs = ['src']
+	    java {
+	        srcDirs = []
+	    }
+		resources {
+		    srcDirs = ['src']
 		}
 	}
 	test {
-		java {
+		resources {
 			srcDirs = ['test']
 		}
 	}
@@ -52,6 +55,13 @@ eclipse {
 	buildCommand 'org.eclipse.pde.SchemaBuilder'
   }
 }
+
+
+// Workaround https://issues.gradle.org/browse/GRADLE-1288
+task mkClassesOutput << {
+    file("${projectDir}/build/classes/main").mkdirs()
+}
+jar.dependsOn(mkClassesOutput)
 
 // Output MANIFEST.MF statically so eclipse can see it for plugin development
 task eclipsePluginManifest(dependsOn: jar) << {
