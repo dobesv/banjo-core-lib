@@ -1,5 +1,8 @@
 #!banjo
-"Trait for totally ordered types of objects.  The object need only implement `==` and `<` and this trait provides `≤`, `>`, `≥`, `≠`, and `<=>`." ⇒ {
+"
+ Trait for totally ordered types of objects.  The object need only implement `==` and `<` 
+ and this trait provides `≤`, `>`, `≥`, `≠`, and `<=>`.
+" ⇒ {
   (x ≤ y) = (x < y || x == y)
   (x > y) = !(x < y || x == y)
   (x ≥ y) = !(x < y)

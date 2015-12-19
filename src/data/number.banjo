@@ -17,6 +17,7 @@ number(n bits, d bits, is negative) ↦ (
     2. Whole numbers must have a `d == [true]`
     3. If the denominator `d` is zero, the numerator must be `[]` or `[true]`.
   "
+  
   usage examples = [
     #0 == number([], [true], false)
     #1 == number([true], [true], false)

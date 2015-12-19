@@ -15,7 +15,7 @@ traits.total order @ traits.atom @ {
       (false || false) == false
       (false || true) == true
       (false || []) == []
-   ]
+    ]
   ) ⇒ x
   (false & x) = false
   (false * x) = false

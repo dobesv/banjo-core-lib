@@ -1,8 +1,11 @@
 (initial event, value of, next event of) ↦
   initial event ;
-      (x ↦ 
-        [value of(x)] + 
-        list.from event chain(
-          next event of(x), value of, next event of)
-      ) ?: []
+    (x ↦ 
+      [value of(x)] + 
+      list.from event chain(
+        next event of(x)
+        value of
+        next event of
+      )
+    ) ?: []
     
