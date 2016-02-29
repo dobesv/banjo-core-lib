@@ -1,0 +1,7 @@
+(
+  "f ∘ [x] == [f(x)]"
+  usage examples = [
+    ((1.+) ∘ (2.*))(3) == (1+(2*3))  
+  ]
+) ⇒
+language core runtime.compose

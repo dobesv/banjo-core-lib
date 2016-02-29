@@ -1,0 +1,2 @@
+"True if there exists any `element ∈ collection` where `f(element) == true`" ⇒
+true ∈ (f ∘ collection)

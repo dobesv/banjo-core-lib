@@ -1,0 +1,6 @@
+"Pair of values" ⇒ 
+  (a,b) ↦ {
+    a = a
+    b = b
+  }
+

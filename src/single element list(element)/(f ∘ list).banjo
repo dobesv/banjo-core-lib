@@ -1,0 +1,9 @@
+(
+  "f ∘ [x] == [f(x)]"
+  usage examples = [  
+    (true.== ∘ [true]) == [true]
+    (.is even ∘ [2]) == [true]
+    (./(2) ∘ [4]) == [2]
+  ]
+) ⇒
+single element list(f(element))

@@ -1,0 +1,1 @@
+((elt ↦ if(f(elt)) then [elt] else []) ∘ collection).sum([])

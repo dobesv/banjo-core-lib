@@ -1,0 +1,5 @@
+(
+  reaction(events) = 
+    ((event) ↦ reaction([event] + events)) @ 
+    { events }   
+) ⇒ reactor(reaction([])).events

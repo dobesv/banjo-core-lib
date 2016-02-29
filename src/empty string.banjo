@@ -1,1 +1,1 @@
-data.string(data.list.empty)
+string from list([])

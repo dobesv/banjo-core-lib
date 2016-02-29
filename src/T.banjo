@@ -1,0 +1,4 @@
+(
+  react(timestamp) = 
+    { timestamp } @ ((event) ↦ react(event.timestamp))
+) ⇒ reactor(react(0))

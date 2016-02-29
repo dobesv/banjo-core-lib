@@ -1,0 +1,8 @@
+(
+  "a ∈ [b] == (a == b)"
+  usage examples = [
+    1 ∈ [1] == true
+    "a" ∈ ["b"] == false  
+  ]
+) ⇒
+elt == element
