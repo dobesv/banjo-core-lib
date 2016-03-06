@@ -1,5 +1,0 @@
-{
-  a.into(algebra) = (
-    "Act like a singleton collection."
-  ) ⇒ algebra.element(a)
-}
