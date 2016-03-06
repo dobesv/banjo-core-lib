@@ -1,5 +1,5 @@
 (
-  "f ∘ [x] == [f(x)]"
+  "Compose functions `g` and `f`, such that `(g∘f)(x) = g(f(x))` for all `x` in the domain of `f`"
   usage examples = [
     ((1.+) ∘ (2.*))(3) == (1+(2*3))  
   ]
