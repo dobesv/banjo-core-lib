@@ -1,8 +1,12 @@
 "
-   Reduce a collection to a single-element list using this function as a binary operator.
+   Reduce a collection to a single element using `binary op`.
    
-   If the input collection is empty, returns it as-is.  The `?:` operator can be used to
-   extract the result from the list using a default when the list is empty.
+   If the collection has two or more elements, the operator is applied in a 
+   cumulative fashion to the elements of the collection to give a final single
+   result.
+   
+   If the input collection is empty or has only one element, it is returned
+   unchanged.
 " ⇒
 (usage examples = [
    (x ↦ y ↦ (x + y * y)).reducer([]) == []
@@ -12,4 +16,12 @@
    (.+).reducer [1,2,3] == [6]
    (.*).reducer [2,2,2] == [8]
 ]) ⇒
-(collection) ↦ (collection.first ; (left ↦ (binary op(left) ∘ binary op.reducer(collection.after first)) ?: left)) || collection 
+(collection) ↦ (
+  # If the collection has 2 or more elements, apply the op to the first element and the reduction
+  # of the subsequent elements.  Because the reduction of subsequent elements is a list, we use
+  # ∘ to apply the operator to the result if there is one, or return an empty list otherwise. 
+  # Finally, we use ?: to extract the fully reduced value, falling back on the first element in
+  # the case where the original collection was empty.
+  first reduction(first element) = (binary op(first element) ∘ binary op.reducer(collection.after first)) ?: first element
+  
+) ⇒ (first reduction ∘ collection.first) 
